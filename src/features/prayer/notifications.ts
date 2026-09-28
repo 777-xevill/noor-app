@@ -1,6 +1,9 @@
 import { Platform } from 'react-native';
 import { addDays, wallDay } from '@/lib/dates';
 import { makeI18n } from '@/i18n';
+import { toHijri } from '@/lib/hijri';
+import { useRamadan } from '@/features/ramadan/store';
+import { RAMADAN } from '@/features/ramadan/calendar';
 import { useSettings } from '@/features/settings/store';
 import { PRAYERS, prayerTimesFor } from './times';
 
@@ -50,6 +53,7 @@ export async function reschedulePrayerAlerts() {
   const prefs = { method: s.method, madhab: s.madhab, highLatitude: s.highLatitude, adjustments: s.adjustments };
   // Alerts are written in the app's language at the time they're scheduled.
   const L = makeI18n(s.language);
+  const ramadan = useRamadan.getState();
 
   await N.cancelAllScheduledNotificationsAsync();
   const now = Date.now();
@@ -59,7 +63,34 @@ export async function reschedulePrayerAlerts() {
   for (let d = 0; d < DAYS_AHEAD && pending < MAX_PENDING; d++) {
     const day = addDays(today, d);
     const times = prayerTimesFor(loc, day, prefs, hijriOffset);
+    const isRamadan = toHijri(day, hijriOffset).month === RAMADAN;
+
+    // Ramadan: a reminder before Sehri ends, and an Iftar alert in place of the usual Maghrib one.
+    if (isRamadan && ramadan.sehriReminder > 0) {
+      const sehriEnds = new Date(times.fajr.getTime() - ramadan.sehriMargin * 60_000);
+      const at = new Date(sehriEnds.getTime() - ramadan.sehriReminder * 60_000);
+      if (at.getTime() > now && pending < MAX_PENDING) {
+        await N.scheduleNotificationAsync({
+          content: {
+            title: L.t('notif.sehriTitle', { n: ramadan.sehriReminder }),
+            body: L.t('notif.sehriBody', { time: L.clockFull(sehriEnds, loc.timeZone), city: loc.city }),
+            sound: true,
+          },
+          trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: 'prayer-sound' },
+        });
+        pending++;
+      }
+    }
+    if (isRamadan && ramadan.iftarAlert && times.maghrib.getTime() > now && pending < MAX_PENDING) {
+      await N.scheduleNotificationAsync({
+        content: { title: L.t('notif.iftarTitle', { time: L.clockFull(times.maghrib, loc.timeZone) }), body: L.t('notif.iftarBody', { city: loc.city }), sound: true },
+        trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: times.maghrib, channelId: 'prayer-sound' },
+      });
+      pending++;
+    }
+
     for (const { key } of PRAYERS) {
+      if (isRamadan && ramadan.iftarAlert && key === 'maghrib') continue;
       const kind = alerts[key];
       if (kind === 'off') continue;
       const at = times[key];

@@ -1,4 +1,5 @@
-import { createContext, useContext, useId, type ReactNode } from 'react';
+import { createContext, useContext, useId, useState, type ReactNode } from 'react';
+import { ScreenBirth } from './Reveal';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { type SharedValue, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
@@ -52,6 +53,7 @@ export function Screen({ children, gap = 22, tabs = false }: { children: ReactNo
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
   const lastY = useSharedValue(0);
+  const [born] = useState(() => Date.now());
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (e) => {
@@ -68,6 +70,7 @@ export function Screen({ children, gap = 22, tabs = false }: { children: ReactNo
   });
 
   return (
+    <ScreenBirth.Provider value={born}>
     <ScrollContext.Provider value={scrollY}>
       <View style={{ flex: 1, backgroundColor: t.canvas }}>
         <Canvas />
@@ -101,5 +104,6 @@ export function Screen({ children, gap = 22, tabs = false }: { children: ReactNo
         )}
       </View>
     </ScrollContext.Provider>
+    </ScreenBirth.Provider>
   );
 }

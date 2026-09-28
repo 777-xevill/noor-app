@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field } from '@/components/Field';
 import { Glass } from '@/components/Glass';
 import { Icon, type IconName } from '@/components/Icon';
 import { Press } from '@/components/Press';
+import { FadeUp } from '@/components/Reveal';
 import { Canvas } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { CITIES, type City } from '@/data/cities';
@@ -94,8 +94,6 @@ export default function OnboardingScreen() {
     }
   };
 
-  const enter = FadeInDown.duration(520).easing(Easing.out(Easing.cubic)).withInitialValues({ opacity: 0, transform: [{ translateY: 16 }] });
-
   return (
     <View style={{ flex: 1, backgroundColor: t.canvas }}>
       <Canvas />
@@ -110,7 +108,7 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        <Animated.View key={step} entering={enter} style={{ flex: 1, gap: 18 }}>
+        <FadeUp key={step} style={{ flex: 1, gap: 18 }}>
           {step === 0 && (
             <>
               <Txt variant="h1">{L.t('ob.language')}</Txt>
@@ -256,7 +254,7 @@ export default function OnboardingScreen() {
               {alertsSupported && <TextButton label={L.t('common.notNow')} onPress={finish} />}
             </>
           )}
-        </Animated.View>
+        </FadeUp>
       </ScrollView>
     </View>
   );

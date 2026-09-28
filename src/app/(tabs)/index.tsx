@@ -5,6 +5,7 @@ import { SectionHeader } from '@/components/SectionHeader';
 import { ContinueReading } from '@/features/home/ContinueReading';
 import { HomeHeader } from '@/features/home/HomeHeader';
 import { NextPrayerHero } from '@/features/home/NextPrayerHero';
+import { RamadanCard } from '@/features/home/RamadanCard';
 import { TodayPrayers } from '@/features/home/TodayPrayers';
 import { ToolsGrid } from '@/features/home/ToolsGrid';
 import { VerseCard } from '@/features/home/VerseCard';
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const sections = [
     <HomeHeader key="header" />,
     <NextPrayerHero key="hero" />,
+    <RamadanCard key="ramadan" />,
     <TodayPrayers key="today" />,
     <SectionHeader key="tools-title" title={L.t('home.tools')} action={L.t('common.seeAll')} onAction={() => router.navigate('/explore')} />,
     <ToolsGrid key="tools" />,

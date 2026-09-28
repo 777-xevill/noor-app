@@ -1,20 +1,36 @@
-import type { ReactNode } from 'react';
-import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { STAGGER_MS } from '@/theme/motion';
 
+/** When the enclosing screen first rendered. Provided by <Screen>. */
+export const ScreenBirth = createContext<number>(0);
+
+// Sections that appear later (a tab switch, a toggle) should just be there, not animate in.
+const ENTRANCE_WINDOW_MS = 700;
+
 /**
- * Sections settle into place when a screen first appears: a short rise with a fade,
- * staggered by position. Runs once per mount; skipped when Reduce Motion is on.
+ * A short fade-and-rise. Driven by a shared value on opacity/transform only — never by
+ * layout animations, which on web can pull an element out of the flow when its content changes.
+ * Skipped automatically when Reduce Motion is on (Reanimated's default).
  */
+export function FadeUp({ delay = 0, style: outer, children }: { delay?: number; style?: StyleProp<ViewStyle>; children: ReactNode }) {
+  const progress = useSharedValue(0);
+  useEffect(() => {
+    progress.value = withDelay(delay, withTiming(1, { duration: 620, easing: Easing.out(Easing.cubic) }));
+  }, [delay, progress]);
+  const style = useAnimatedStyle(() => ({ opacity: progress.value, transform: [{ translateY: (1 - progress.value) * 14 }] }));
+  return <Animated.View style={[outer, style]}>{children}</Animated.View>;
+}
+
+/** Sections settle into place when a screen first appears, staggered by position. */
 export function Reveal({ index, children }: { index: number; children: ReactNode }) {
-  return (
-    <Animated.View
-      entering={FadeInDown.duration(620)
-        .delay(index * STAGGER_MS)
-        .easing(Easing.out(Easing.cubic))
-        .withInitialValues({ opacity: 0, transform: [{ translateY: 14 }] })}
-    >
-      {children}
-    </Animated.View>
-  );
+  const born = useContext(ScreenBirth);
+  const [animate] = useState(() => !born || Date.now() - born < ENTRANCE_WINDOW_MS);
+  const progress = useSharedValue(animate ? 0 : 1);
+  useEffect(() => {
+    if (animate) progress.value = withDelay(index * STAGGER_MS, withTiming(1, { duration: 620, easing: Easing.out(Easing.cubic) }));
+  }, [animate, index, progress]);
+  const style = useAnimatedStyle(() => ({ opacity: progress.value, transform: [{ translateY: (1 - progress.value) * 14 }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
 }
