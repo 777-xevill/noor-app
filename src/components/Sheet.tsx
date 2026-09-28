@@ -13,17 +13,16 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(open);
   const progress = useSharedValue(0);
+  // Mount as soon as it opens; unmount only after the closing animation finishes.
+  if (open && !mounted) setMounted(true);
 
   useEffect(() => {
-    if (open) {
-      setMounted(true);
-      progress.value = withSpring(1, spring.smooth);
-    } else if (mounted) {
+    if (open) progress.value = withSpring(1, spring.smooth);
+    else
       progress.value = withTiming(0, timing.fade, (done) => {
         if (done) runOnJS(setMounted)(false);
       });
-    }
-  }, [open, mounted, progress]);
+  }, [open, progress]);
 
   const scrim = useAnimatedStyle(() => ({ opacity: progress.value }));
   const panel = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - progress.value) * 520 }] }));

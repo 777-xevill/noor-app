@@ -48,7 +48,7 @@ export default function PrayersScreen() {
   ];
 
   return (
-    <Screen gap={18}>
+    <Screen tabs gap={18}>
       <Reveal index={0}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <Txt variant="h1">Prayers</Txt>

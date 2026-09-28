@@ -5,6 +5,11 @@ import { CITIES } from '../../src/data/cities';
 import { formatClock, wallDay } from '../../src/lib/dates';
 import { toHijri } from '../../src/lib/hijri';
 import { distanceKm } from '../../src/lib/geo';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
+import { QURAN_EXCERPTS } from '../../src/data/quranExcerpts';
+import { PHRASES } from '../../src/features/tasbih/phrases';
 import type { CalcMethod, PrayerLocation } from '../../src/features/prayer/location';
 import { prayerTimesFor } from '../../src/features/prayer/times';
 
@@ -111,6 +116,50 @@ async function main() {
     const ok = h.day === Number(ref.day) && h.month + 1 === ref.month.number && h.year === Number(ref.year);
     if (!ok) failures++;
     console.log(`${ok ? 'ok  ' : 'FAIL'} hijri ${iso} ours ${h.day}/${h.month + 1}/${h.year} ref ${ref.day}/${ref.month.number}/${ref.year}`);
+  }
+
+  // Typed Arabic phrases: their letters (ignoring vowel marks and alef/ya spelling variants)
+  // must appear in the sourced Hisnul Muslim or Quran text.
+  const root = join(__dirname, '..', '..');
+  const skeleton = (s: string) =>
+    s
+      .replace(/[ً-ٰٟۖ-ۭـ]/g, '')
+      .replace(/[أإآٱ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/[^ء-ي ]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const duas = JSON.parse(readFileSync(join(root, 'assets/data/duas.qdata'), 'utf8')) as { duas: { ar: string }[] }[];
+  const parts = duas.flatMap((c) => c.duas.map((d) => d.ar));
+  for (let n = 1; n <= 114; n++) {
+    const s = JSON.parse(readFileSync(join(root, `assets/data/quran/${n}.qdata`), 'utf8')) as { ayahs: { ar: string }[] };
+    parts.push(...s.ayahs.map((a) => a.ar));
+  }
+  const corpus = ' ' + skeleton(parts.join(' ')) + ' ';
+  const phrases = [
+    ...PHRASES.map((p) => ({ label: `tasbih: ${p.tr}`, ar: p.ar })),
+    ...SHAHADAH.verifyParts.map((ar, i) => ({ label: `shahadah part ${i + 1}`, ar })),
+    ...GREETINGS.filter((g) => g.verify).map((g) => ({ label: `greeting: ${g.tr}`, ar: g.ar })),
+  ];
+  for (const p of phrases) {
+    checks++;
+    const sk = skeleton(p.ar);
+    const whole = corpus.includes(sk);
+    // Some correct phrases are worded differently in the sources (e.g. "wa fika barak Allah");
+    // then every word must still appear exactly, which is what catches a typo.
+    const byWord = !whole && sk.split(' ').every((w) => corpus.includes(` ${w} `));
+    const ok = whole || byWord;
+    if (!ok) failures++;
+    console.log(`${ok ? 'ok  ' : 'FAIL'} phrase ${p.label}${byWord ? ' (each word found)' : ''}`);
+  }
+
+  // Quran excerpts shown in the app must be exact prefixes of their ayah.
+  for (const [name, ex] of Object.entries(QURAN_EXCERPTS)) {
+    checks++;
+    const s = JSON.parse(readFileSync(join(root, `assets/data/quran/${ex.surah}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string }[] };
+    const ok = !!s.ayahs.find((a) => a.n === ex.ayah)?.ar.startsWith(ex.ar);
+    if (!ok) failures++;
+    console.log(`${ok ? 'ok  ' : 'FAIL'} quran excerpt ${name} (${ex.surah}:${ex.ayah})`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

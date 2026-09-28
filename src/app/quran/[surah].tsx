@@ -156,8 +156,10 @@ export default function ReaderScreen() {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, []);
 
+  const playingRef = useRef<number | null>(null);
   const play = useCallback(
     (ayah: number | null) => {
+      playingRef.current = ayah;
       setAudioError(false);
       setPlayingAyah(ayah);
       if (ayah === null) {
@@ -170,14 +172,18 @@ export default function ReaderScreen() {
     [player, n],
   );
 
+  // When an ayah finishes, continue with the next one (and keep it in view).
   useEffect(() => {
-    if (!status.didJustFinish || playingAyah === null) return;
-    const next = playingAyah + 1;
-    if (next <= meta.ayahs) {
-      play(next);
-      listRef.current?.scrollToIndex({ index: next - 1, animated: true, viewPosition: 0.2 });
-    } else play(null);
-  }, [status.didJustFinish, playingAyah, meta.ayahs, play]);
+    const sub = player.addListener('playbackStatusUpdate', (st) => {
+      if (!st.didJustFinish || playingRef.current === null) return;
+      const next = playingRef.current + 1;
+      if (next <= meta.ayahs) {
+        play(next);
+        listRef.current?.scrollToIndex({ index: next - 1, animated: true, viewPosition: 0.2 });
+      } else play(null);
+    });
+    return () => sub.remove();
+  }, [player, meta.ayahs, play]);
 
   // If a recitation doesn't start within a few seconds, say so instead of spinning silently.
   useEffect(() => {

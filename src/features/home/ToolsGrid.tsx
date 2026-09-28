@@ -15,7 +15,7 @@ function ToolTile({ tool }: { tool: Tool }) {
       scaleTo={0.94}
       accessibilityRole="button"
       accessibilityLabel={tool.label}
-      onPress={tool.href ? () => router.navigate(tool.href!) : undefined}
+      onPress={() => router.push(tool.href)}
     >
       <Glass radius={22} padding={0} style={{ height: 92, alignItems: 'center', justifyContent: 'center', gap: 9 }}>
         <Icon name={tool.icon} size={24} color={t.text} />

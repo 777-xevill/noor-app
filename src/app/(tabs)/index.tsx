@@ -22,7 +22,7 @@ export default function HomeScreen() {
     <WeekCard key="week" />,
   ];
   return (
-    <Screen>
+    <Screen tabs>
       {sections.map((section, i) => (
         <Reveal key={section.key} index={i}>
           {section}

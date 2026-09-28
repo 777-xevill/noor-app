@@ -46,7 +46,8 @@ const SCROLL_SLOP = 4;
 // Near the top the bar always stays expanded.
 const EXPANDED_ZONE = 80;
 
-export function Screen({ children, gap = 22 }: { children: ReactNode; gap?: number }) {
+/** `tabs`: the screen sits under the floating tab bar (extra bottom space, content fades beneath it). */
+export function Screen({ children, gap = 22, tabs = false }: { children: ReactNode; gap?: number; tabs?: boolean }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const scrollY = useSharedValue(0);
@@ -77,7 +78,7 @@ export function Screen({ children, gap = 22 }: { children: ReactNode; gap?: numb
           contentContainerStyle={{
             paddingTop: insets.top + 12,
             paddingHorizontal: GUTTER,
-            paddingBottom: insets.bottom + TAB_BAR_CLEARANCE,
+            paddingBottom: insets.bottom + (tabs ? TAB_BAR_CLEARANCE : 36),
             gap,
           }}
         >
@@ -90,12 +91,14 @@ export function Screen({ children, gap = 22 }: { children: ReactNode; gap?: numb
           colors={[t.canvasTop, `${t.canvasTop}00`]}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top + 18 }}
         />
-        <LinearGradient
-          pointerEvents="none"
-          colors={[`${t.canvas}00`, `${t.canvas}D9`, t.canvas]}
-          locations={[0, 0.6, 1]}
-          style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: insets.bottom + 120 }}
-        />
+        {tabs && (
+          <LinearGradient
+            pointerEvents="none"
+            colors={[`${t.canvas}00`, `${t.canvas}D9`, t.canvas]}
+            locations={[0, 0.6, 1]}
+            style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: insets.bottom + 120 }}
+          />
+        )}
       </View>
     </ScrollContext.Provider>
   );

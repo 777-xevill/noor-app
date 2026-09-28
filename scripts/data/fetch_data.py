@@ -170,8 +170,8 @@ def clean(text):
 
 
 def translit(text):
-    # Tanzil-style "AA" marks the letter ʿayn; show it the way readers expect.
-    return re.sub(r"AA", "ʿ", clean(text))
+    # Tanzil-style "AA" marks the letter ʿayn; show it as ‘ (the UI font has no ʿ glyph).
+    return re.sub(r"AA", "‘", clean(text))
 
 
 def duas():

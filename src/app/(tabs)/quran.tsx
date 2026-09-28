@@ -104,7 +104,7 @@ export default function QuranScreen() {
   }, [query]);
 
   return (
-    <Screen gap={18}>
+    <Screen tabs gap={18}>
       <Reveal index={0}>
         <Txt variant="h1" style={{ marginTop: 8 }}>
           Quran

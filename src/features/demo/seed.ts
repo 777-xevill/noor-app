@@ -18,6 +18,8 @@ export function seedDemoData() {
 
   const settings = useSettings.getState();
   if (!settings.displayName) settings.setDisplayName('Ashik');
+  // The preview opens straight to Home; the welcome flow stays available from Settings.
+  if (!settings.onboarded) settings.set({ onboarded: true });
 
   const log = usePrayerLog.getState();
   if (Object.keys(log.days).length === 0) {
