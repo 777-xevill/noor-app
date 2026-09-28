@@ -41,8 +41,15 @@ writeFileSync(join(dist, 'host.html'), viewport + host);
 mkdirSync(join(dist, 'js'), { recursive: true });
 writeFileSync(join(dist, bundlePath), code);
 
+// Publish map, relative to dist-preview (use it as the publish root). Data assets use a custom
+// extension, so they're declared as JSON explicitly.
 const map = Object.fromEntries(
-  files.map((p) => [p === bundle ? bundlePath : relative(dist, p).split(sep).join('/'), relative(root, p).split(sep).join('/')]),
+  files.map((p) => {
+    const rel = relative(dist, p).split(sep).join('/');
+    const key = p === bundle ? bundlePath : rel;
+    const from = p === bundle ? bundlePath : rel;
+    return [key, rel.endsWith('.qdata') ? { from, contentType: 'application/json' } : from];
+  }),
 );
 writeFileSync(join(out, 'files.json'), JSON.stringify(map, null, 2));
 console.log(`Preview ready: ${Object.keys(map).length} files, bundle ${bundlePath}`);
