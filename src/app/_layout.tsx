@@ -9,6 +9,7 @@ import { useSavedDuas } from '@/features/duas/data';
 import { useFasting } from '@/features/fasting/store';
 import { useJournal } from '@/features/journal/store';
 import { useRamadan } from '@/features/ramadan/store';
+import { useRewards } from '@/features/rewards/store';
 import { useTasbih } from '@/features/tasbih/store';
 import { useZakat } from '@/features/zakat/store';
 import { usePrayerLog } from '@/features/prayer/log';
@@ -31,7 +32,7 @@ function useStoresReady() {
   useEffect(() => {
     // Every persisted store must be loaded before the first screen renders, so nothing flashes empty
     // and no early write can overwrite saved data.
-    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan].map(hydrated)).then(() => {
+    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards].map(hydrated)).then(() => {
       seedDemoData();
       setReady(true);
     });

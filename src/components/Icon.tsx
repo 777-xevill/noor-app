@@ -78,6 +78,7 @@ import Hourglass from 'lucide-react-native/icons/hourglass';
 import CircleQuestionMark from 'lucide-react-native/icons/circle-question-mark';
 import Crosshair from 'lucide-react-native/icons/crosshair';
 import Gem from 'lucide-react-native/icons/gem';
+import Award from 'lucide-react-native/icons/award';
 
 type IconProps = { size?: number; color: string; strokeWidth?: number; fill?: string };
 
@@ -207,6 +208,7 @@ const ICONS = {
   help: lucide(CircleQuestionMark),
   crosshair: lucide(Crosshair),
   gem: lucide(Gem),
+  award: lucide(Award),
   kaaba: Kaaba,
 } satisfies Record<string, ComponentType<IconProps>>;
 

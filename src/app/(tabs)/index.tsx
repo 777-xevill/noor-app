@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { ContinueReading } from '@/features/home/ContinueReading';
 import { HomeHeader } from '@/features/home/HomeHeader';
+import { MilestoneCard } from '@/features/home/MilestoneCard';
 import { NextPrayerHero } from '@/features/home/NextPrayerHero';
 import { RamadanCard } from '@/features/home/RamadanCard';
 import { TodayPrayers } from '@/features/home/TodayPrayers';
@@ -11,14 +12,18 @@ import { ToolsGrid } from '@/features/home/ToolsGrid';
 import { VerseCard } from '@/features/home/VerseCard';
 import { WeekCard } from '@/features/home/WeekCard';
 import { useT } from '@/i18n';
+import { useMilestones } from '@/features/rewards/useMilestones';
 
 export default function HomeScreen() {
   const L = useT();
+  // Keeps milestones up to date as prayers are marked here.
+  const { unseen } = useMilestones();
   const sections = [
     <HomeHeader key="header" />,
     <NextPrayerHero key="hero" />,
     <RamadanCard key="ramadan" />,
     <TodayPrayers key="today" />,
+    unseen.length > 0 && <MilestoneCard key="milestone" ids={unseen} />,
     <SectionHeader key="tools-title" title={L.t('home.tools')} action={L.t('common.seeAll')} onAction={() => router.navigate('/explore')} />,
     <ToolsGrid key="tools" />,
     <ContinueReading key="reading" />,
@@ -27,7 +32,7 @@ export default function HomeScreen() {
   ];
   return (
     <Screen tabs>
-      {sections.map((section, i) => (
+      {sections.filter((s) => !!s).map((section, i) => (
         <Reveal key={section.key} index={i}>
           {section}
         </Reveal>

@@ -2,7 +2,7 @@
 // implementation (api.aladhan.com). Run: npx tsx scripts/verify/verify-religious.ts
 import { Coordinates, Qibla } from 'adhan';
 import { CITIES } from '../../src/data/cities';
-import { formatClock, wallDay } from '../../src/lib/dates';
+import { addDays, type DayParts, dayKey, formatClock, wallDay } from '../../src/lib/dates';
 import { toHijri } from '../../src/lib/hijri';
 import { distanceKm } from '../../src/lib/geo';
 import { readFileSync } from 'node:fs';
@@ -12,6 +12,8 @@ import { QURAN_EXCERPTS } from '../../src/data/quranExcerpts';
 import { PHRASES } from '../../src/features/tasbih/phrases';
 import type { CalcMethod, PrayerLocation } from '../../src/features/prayer/location';
 import { prayerTimesFor } from '../../src/features/prayer/times';
+import { computeStats } from '../../src/features/rewards/milestones';
+import { streakOf } from '../../src/features/rewards/streaks';
 
 const ALADHAN_METHOD: Partial<Record<CalcMethod, number>> = {
   Karachi: 1,
@@ -160,6 +162,42 @@ async function main() {
     const ok = !!s.ayahs.find((a) => a.n === ex.ayah)?.ar.startsWith(ex.ar);
     if (!ok) failures++;
     console.log(`${ok ? 'ok  ' : 'FAIL'} quran excerpt ${name} (${ex.surah}:${ex.ayah})`);
+  }
+
+  // Milestones: Sunnah fasts are recognised on the right Hijri days; a fast logged on Eid never counts.
+  const hijriDay = (from: DayParts, month: number, day: number) => {
+    for (let d = from, i = 0; i < 400; i++, d = addDays(d, 1)) {
+      const h = toHijri(d);
+      if (h.month === month && h.day === day) return d;
+    }
+    throw new Error('hijri day not found');
+  };
+  const start: DayParts = { y: 2026, m: 0, d: 1 };
+  const eid = hijriDay(start, 9, 1);
+  const arafah = hijriDay(start, 11, 9);
+  const ashura = hijriDay(start, 0, 10);
+  const fasts: Record<string, 'fasted'> = {};
+  for (let i = 0; i < 7; i++) fasts[dayKey(addDays(eid, i))] = 'fasted'; // Eid day + the six after it
+  fasts[dayKey(arafah)] = 'fasted';
+  fasts[dayKey(addDays(ashura, -1))] = 'fasted'; // 9 Muharram is not Ashura
+  fasts[dayKey(ashura)] = 'fasted';
+  const stats = computeStats({ today: start, hijriOffset: 0, prayers: {}, reading: {}, dhikr: {}, journalDays: [], fasts, juzRead: {} });
+  const today: DayParts = { y: 2026, m: 8, d: 29 };
+  const run = [1, 2, 3].map((n) => dayKey(addDays(today, -n)));
+  const older = [10, 11, 12, 13, 14].map((n) => dayKey(addDays(today, -n)));
+  const rewardChecks: [string, boolean][] = [
+    [`six of Shawwal, Eid excluded (Eid ${dayKey(eid)})`, stats.shawwal === 6],
+    [`Arafah fast (${dayKey(arafah)})`, stats.arafah === 1],
+    [`Ashura fast (${dayKey(ashura)}), 9 Muharram not counted`, stats.ashura === 1],
+    ['streak holds until today is done', streakOf(run, today).current === 3],
+    ['streak includes today once done', streakOf([...run, dayKey(today)], today).current === 4],
+    ['best streak across history', streakOf([...run, ...older], today).best === 5],
+    ['broken streak resets', streakOf(older, today).current === 0],
+  ];
+  for (const [label, ok] of rewardChecks) {
+    checks++;
+    if (!ok) failures++;
+    console.log(`${ok ? 'ok  ' : 'FAIL'} milestones: ${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

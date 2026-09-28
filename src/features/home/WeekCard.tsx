@@ -1,6 +1,8 @@
 import { View } from 'react-native';
+import { router } from 'expo-router';
 import { Chip } from '@/components/Chip';
 import { Glass } from '@/components/Glass';
+import { Press } from '@/components/Press';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Txt } from '@/components/Txt';
 import { addDays, dayKey, weekdayMon0 } from '@/lib/dates';
@@ -42,7 +44,9 @@ export function WeekCard() {
             {L.t('home.prayersSoFar', { done: total, possible })}
           </Txt>
         </View>
-        {streak > 0 && <Chip variant="ink" label={L.t('home.streak', { n: streak })} />}
+        <Press onPress={() => router.push('/milestones')} scaleTo={0.94} accessibilityRole="button" accessibilityLabel={L.t('ms.seeAll')}>
+          {streak > 0 ? <Chip variant="ink" icon="flame" label={L.t('home.streak', { n: streak })} /> : <Chip variant="glass" icon="award" label={L.t('ms.title')} />}
+        </Press>
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
