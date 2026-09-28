@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSettings } from '@/features/settings/store';
 import { spring } from '@/theme/motion';
+import { useT } from '@/i18n';
 import { useScheme, useTheme } from '@/theme/useTheme';
 import { Glass } from './Glass';
 import { Icon } from './Icon';
@@ -13,6 +14,7 @@ const SIZE = 44;
 /** Sun and moon trade places with a quarter turn when the appearance changes. */
 export function ThemeToggle() {
   const t = useTheme();
+  const { t: tr } = useT();
   const scheme = useScheme();
   const setThemeMode = useSettings((s) => s.setThemeMode);
   const isDark = useSharedValue(scheme === 'dark' ? 1 : 0);
@@ -36,7 +38,7 @@ export function ThemeToggle() {
       scaleTo={0.88}
       hitSlop={6}
       accessibilityRole="button"
-      accessibilityLabel={scheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      accessibilityLabel={tr(scheme === 'dark' ? 'home.toLight' : 'home.toDark')}
       onPress={() => setThemeMode(scheme === 'dark' ? 'light' : 'dark')}
     >
       <Glass radius={SIZE / 2} padding={0} style={{ width: SIZE, height: SIZE }}>

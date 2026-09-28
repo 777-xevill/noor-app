@@ -13,6 +13,7 @@ import { Txt } from '@/components/Txt';
 import { DUA_CHAPTERS } from '@/data/duaChapters';
 import { DuaCard } from '@/features/duas/DuaCard';
 import { FEATURED, useDuas, useSavedDuas } from '@/features/duas/data';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const open = (id: number) => router.push({ pathname: '/duas/[chapter]', params: { chapter: String(id) } });
@@ -20,6 +21,7 @@ const norm = (s: string) => s.toLowerCase();
 
 export default function DuasScreen() {
   const t = useTheme();
+  const L = useT();
   const [query, setQuery] = useState('');
   const { data } = useDuas();
   const saved = useSavedDuas((s) => s.saved);
@@ -50,13 +52,18 @@ export default function DuasScreen() {
 
   return (
     <Screen gap={18}>
-      <ScreenHeader title="Duas & Adhkar" subtitle="Hisnul Muslim · Fortress of the Muslim" />
-      <Field icon="search" placeholder="Search e.g. sleep, travel, forgiveness" value={query} onChangeText={setQuery} autoCorrect={false} />
+      <ScreenHeader title={L.t('duas.title')} subtitle={L.t('duas.subtitle')} />
+      {L.lang === 'bn' && (
+        <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
+          {L.t('duas.englishOnly')}
+        </Txt>
+      )}
+      <Field icon="search" placeholder={L.t('duas.searchPh')} value={query} onChangeText={setQuery} autoCorrect={false} />
 
       {matches ? (
         <View style={{ gap: 12 }}>
           <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
-            {matches.length ? `${matches.length}${matches.length === 40 ? '+' : ''} results` : `Nothing found for “${query}”.`}
+            {matches.length ? L.t('duas.results', { n: `${L.num(matches.length)}${matches.length === 40 ? '+' : ''}` }) : L.t('duas.nothing', { q: query })}
           </Txt>
           {matches.map((m) => (
             <View key={`${m.chapterId}:${m.dua.id}`} style={{ gap: 6 }}>
@@ -76,15 +83,15 @@ export default function DuasScreen() {
               {FEATURED.map((f) => {
                 const info = DUA_CHAPTERS.find((c) => c.id === f.id);
                 return (
-                  <Press key={f.id} onPress={() => open(f.id)} scaleTo={0.95} style={{ width: '48%', flexGrow: 1 }} accessibilityRole="button" accessibilityLabel={f.label}>
+                  <Press key={f.id} onPress={() => open(f.id)} scaleTo={0.95} style={{ width: '48%', flexGrow: 1 }} accessibilityRole="button" accessibilityLabel={L.t(f.label)}>
                     <Glass radius={22} padding={14} style={{ gap: 12, minHeight: 104 }}>
                       <View style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: t.ink, alignItems: 'center', justifyContent: 'center' }}>
                         <Icon name={f.icon} size={19} color={t.onInk} />
                       </View>
                       <View>
-                        <Txt variant="title">{f.label}</Txt>
+                        <Txt variant="title">{L.t(f.label)}</Txt>
                         <Txt variant="caption" tone="muted">
-                          {info ? `${info.count} ${info.count === 1 ? 'dua' : 'duas'}` : ''}
+                          {info ? (info.count === 1 ? L.t('duas.one') : L.t('duas.n', { n: info.count })) : ''}
                         </Txt>
                       </View>
                     </Glass>
@@ -96,7 +103,7 @@ export default function DuasScreen() {
 
           {savedDuas.length > 0 && (
             <View style={{ gap: 12 }}>
-              <SectionHeader title="Saved" meta={`${savedDuas.length} ${savedDuas.length === 1 ? 'dua' : 'duas'}`} />
+              <SectionHeader title={L.t('duas.saved')} meta={savedDuas.length === 1 ? L.t('duas.one') : L.t('duas.n', { n: savedDuas.length })} />
               {savedDuas.map((m) => (
                 <DuaCard key={`${m.chapterId}:${m.dua.id}`} chapterId={m.chapterId} chapterTitle={m.chapterTitle} dua={m.dua} />
               ))}
@@ -105,19 +112,19 @@ export default function DuasScreen() {
 
           <Reveal index={1}>
             <View style={{ gap: 12 }}>
-              <SectionHeader title="All chapters" meta={`${DUA_CHAPTERS.length} chapters`} />
+              <SectionHeader title={L.t('duas.allChapters')} meta={L.t('duas.chapters', { n: DUA_CHAPTERS.length })} />
               <Glass radius={24} padding={0} style={{ paddingHorizontal: 14 }}>
                 {DUA_CHAPTERS.map((c, i) => (
                   <Press key={c.id} onPress={() => open(c.id)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={c.title}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: i < DUA_CHAPTERS.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
                       <Txt variant="caption" tone="muted" tabular style={{ width: 28 }}>
-                        {c.id}
+                        {L.num(c.id)}
                       </Txt>
                       <Txt variant="bodyStrong" style={{ flex: 1 }}>
                         {c.title}
                       </Txt>
                       <Txt variant="caption" tone="muted" tabular>
-                        {c.count}
+                        {L.num(c.count)}
                       </Txt>
                       <Icon name="chevronRight" size={16} color={t.textMuted} />
                     </View>

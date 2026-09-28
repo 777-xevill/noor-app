@@ -58,7 +58,8 @@ function usePrayerAlerts(enabled: boolean) {
         s.hijriOffset !== prev.hijriOffset ||
         s.alerts !== prev.alerts ||
         s.reminderBefore !== prev.reminderBefore ||
-        s.onboarded !== prev.onboarded
+        s.onboarded !== prev.onboarded ||
+        s.language !== prev.language
       )
         plan();
     });

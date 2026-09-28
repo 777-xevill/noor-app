@@ -6,12 +6,14 @@ import { Icon } from '@/components/Icon';
 import { Press } from '@/components/Press';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Txt } from '@/components/Txt';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 import { type Dua, isInstruction, useSavedDuas } from './data';
 
 /** One dua: Arabic, transliteration, meaning, and a counter when it's said more than once. */
 export function DuaCard({ chapterId, chapterTitle, dua }: { chapterId: number; chapterTitle: string; dua: Dua }) {
   const t = useTheme();
+  const L = useT();
   const key = `${chapterId}:${dua.id}`;
   const saved = useSavedDuas((s) => s.saved.includes(key));
   const toggle = useSavedDuas((s) => s.toggle);
@@ -63,17 +65,17 @@ export function DuaCard({ chapterId, chapterTitle, dua }: { chapterId: number; c
             onPress={tap}
             scaleTo={0.92}
             accessibilityRole="button"
-            accessibilityLabel={done ? 'Completed. Tap to start again.' : `Count repetition ${count + 1} of ${dua.repeat}`}
+            accessibilityLabel={done ? L.t('duas.doneA11y') : L.t('duas.countA11y', { c: count + 1, n: dua.repeat })}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
           >
             <ProgressRing size={30} stroke={3} progress={count / dua.repeat} color={t.ink} track={t.track} />
             <Txt variant="caption" tone={done ? 'default' : 'soft'} tabular>
-              {done ? 'Completed' : `${count} / ${dua.repeat} · tap to count`}
+              {done ? L.t('duas.completed') : L.t('duas.tapCount', { c: count, n: dua.repeat })}
             </Txt>
           </Press>
         ) : (
           <Txt variant="caption" tone="muted">
-            Say once
+            {L.t('duas.sayOnce')}
           </Txt>
         )}
         <View style={{ flex: 1 }} />
@@ -81,7 +83,7 @@ export function DuaCard({ chapterId, chapterTitle, dua }: { chapterId: number; c
           hitSlop={10}
           scaleTo={0.82}
           accessibilityRole="button"
-          accessibilityLabel={saved ? 'Remove from saved' : 'Save dua'}
+          accessibilityLabel={L.t(saved ? 'duas.unsave' : 'duas.save')}
           onPress={() => {
             if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             toggle(key);
@@ -93,7 +95,7 @@ export function DuaCard({ chapterId, chapterTitle, dua }: { chapterId: number; c
           hitSlop={10}
           scaleTo={0.82}
           accessibilityRole="button"
-          accessibilityLabel="Share dua"
+          accessibilityLabel={L.t('duas.share')}
           onPress={() =>
             Share.share({ message: `${dua.ar}\n\n${dua.en}\n\n— Hisnul Muslim: ${chapterTitle}` }).catch(() => {})
           }

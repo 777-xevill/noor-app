@@ -16,12 +16,15 @@ import { AFTER_PRAYER, PHRASES } from '@/features/tasbih/phrases';
 import { type TasbihMode, useTasbih } from '@/features/tasbih/store';
 import { fonts } from '@/theme/fonts';
 import { spring } from '@/theme/motion';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const TARGETS = [33, 99, 100, 0];
 
 export default function TasbihScreen() {
   const t = useTheme();
+  const L = useT();
+  const bn = L.lang === 'bn';
   const { width } = useWindowDimensions();
   const tz = useSettings((s) => s.location.timeZone);
   const s = useTasbih();
@@ -60,22 +63,22 @@ export default function TasbihScreen() {
 
   return (
     <Screen gap={18}>
-      <ScreenHeader title="Tasbih" subtitle={`${todayTotal.toLocaleString('en-US')} today`} right={<IconButton icon="reset" label="Reset counter" onPress={reset} />} />
+      <ScreenHeader title={L.t('tasbih.title')} subtitle={L.t('tasbih.today', { n: L.num(todayTotal.toLocaleString('en-US')) })} right={<IconButton icon="reset" label={L.t('tasbih.reset')} onPress={reset} />} />
 
       <Segmented<TasbihMode>
         value={s.mode}
         onChange={(mode) => s.set({ mode, count: 0, step: 0, rounds: 0 })}
         options={[
-          { value: 'free', label: 'Dhikr' },
-          { value: 'afterPrayer', label: 'After prayer · 33 33 34' },
+          { value: 'free', label: L.t('tasbih.dhikr') },
+          { value: 'afterPrayer', label: L.t('tasbih.afterPrayer') },
         ]}
       />
 
       {!inSequence && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 2 }}>
           {PHRASES.map((p) => (
-            <Press key={p.id} scaleTo={0.94} onPress={() => s.set({ phraseId: p.id, count: 0, rounds: 0 })} accessibilityRole="button" accessibilityLabel={p.tr}>
-              <Chip variant={p.id === s.phraseId ? 'ink' : 'glass'} label={p.tr} />
+            <Press key={p.id} scaleTo={0.94} onPress={() => s.set({ phraseId: p.id, count: 0, rounds: 0 })} accessibilityRole="button" accessibilityLabel={bn ? p.trBn : p.tr}>
+              <Chip variant={p.id === s.phraseId ? 'ink' : 'glass'} label={bn ? p.trBn : p.tr} />
             </Press>
           ))}
         </ScrollView>
@@ -85,14 +88,14 @@ export default function TasbihScreen() {
         <Txt variant="arabic" style={{ textAlign: 'center', fontSize: 30, lineHeight: 56 }}>
           {phrase.ar}
         </Txt>
-        <Txt variant="title">{phrase.tr}</Txt>
+        <Txt variant="title">{bn ? phrase.trBn : phrase.tr}</Txt>
         <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-          {phrase.en}
+          {bn ? phrase.bn : phrase.en}
         </Txt>
       </Glass>
 
       {/* The whole ring is the button: tap anywhere inside it to count. */}
-      <Pressable onPress={tap} accessibilityRole="button" accessibilityLabel={`Count. ${s.count} so far.`} style={{ alignSelf: 'center' }}>
+      <Pressable onPress={tap} accessibilityRole="button" accessibilityLabel={L.t('tasbih.countA11y', { n: s.count })} style={{ alignSelf: 'center' }}>
         <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
           <View style={{ position: 'absolute' }}>
             <ProgressRing size={size} stroke={10} progress={sequenceDone ? 1 : target ? s.count / target : 0} color={t.ink} track={t.track} />
@@ -112,22 +115,22 @@ export default function TasbihScreen() {
           >
             {sequenceDone ? (
               <>
-                <Txt variant="h1">Complete</Txt>
+                <Txt variant="h1">{L.t('tasbih.complete')}</Txt>
                 <Txt variant="caption" tone="muted">
-                  100 · may Allah accept it
+                  {L.t('tasbih.accept')}
                 </Txt>
               </>
             ) : (
               <>
                 <Animated.View style={numberStyle}>
                   <Txt style={{ fontFamily: fonts.semibold, fontSize: 76, lineHeight: 84, letterSpacing: -3, color: t.text }} tabular>
-                    {s.count}
+                    {L.num(s.count)}
                   </Txt>
                 </Animated.View>
                 <Txt variant="caption" tone="muted" tabular>
-                  {target ? `of ${target}` : 'no limit'}
-                  {!inSequence && s.rounds > 0 ? ` · round ${s.rounds + 1}` : ''}
-                  {inSequence ? ` · step ${s.step + 1} of 3` : ''}
+                  {target ? L.t('tasbih.of', { n: target }) : L.t('tasbih.noLimit')}
+                  {!inSequence && s.rounds > 0 ? L.t('tasbih.round', { n: s.rounds + 1 }) : ''}
+                  {inSequence ? L.t('tasbih.step', { n: s.step + 1 }) : ''}
                 </Txt>
               </>
             )}
@@ -135,24 +138,24 @@ export default function TasbihScreen() {
         </View>
       </Pressable>
       <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-        Tap the circle to count
+        {L.t('tasbih.tap')}
       </Txt>
 
       {!inSequence && (
         <View style={{ gap: 8 }}>
           <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 6 }}>
-            Target
+            {L.t('tasbih.target')}
           </Txt>
           <Segmented
             value={String(s.target)}
             onChange={(v) => s.set({ target: Number(v), count: 0, rounds: 0 })}
-            options={TARGETS.map((n) => ({ value: String(n), label: n ? String(n) : '∞' }))}
+            options={TARGETS.map((n) => ({ value: String(n), label: n ? L.num(n) : '∞' }))}
           />
         </View>
       )}
       {sequenceDone && (
         <Press onPress={reset} style={{ alignSelf: 'center' }} accessibilityRole="button">
-          <Chip variant="ink" label="Start again" />
+          <Chip variant="ink" label={L.t('tasbih.again')} />
         </Press>
       )}
     </Screen>

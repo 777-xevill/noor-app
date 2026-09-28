@@ -5,9 +5,8 @@ import { Chip } from '@/components/Chip';
 import { IconButton } from '@/components/IconButton';
 import { useScreenScroll } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
-import { addDays, formatClock, formatCountdown } from '@/lib/dates';
-import { METHOD_LABEL } from '@/features/prayer/location';
-import { prayerLabel } from '@/features/prayer/times';
+import { addDays } from '@/lib/dates';
+import { useT } from '@/i18n';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { fonts } from '@/theme/fonts';
 import { onPhoto } from '@/theme/tokens';
@@ -21,8 +20,9 @@ export function NextPrayerHero() {
   const t = useTheme();
   const { now, loc, prefs, schedule } = useSchedule();
   const { key, at, tomorrow } = schedule.next;
-  const clock = formatClock(at, loc.timeZone);
-  const sunrise = formatClock(schedule.times.sunrise, loc.timeZone);
+  const L = useT();
+  const clock = L.clock(at, loc.timeZone);
+  const sunrise = L.clock(schedule.times.sunrise, loc.timeZone);
   const scrollY = useScreenScroll();
 
   // Parallax: the photo travels slower than the card while scrolling, and swells on pull-down.
@@ -43,14 +43,14 @@ export function NextPrayerHero() {
 
       <View style={styles.inner}>
         <View style={styles.row}>
-          <Chip variant="photo" live label={tomorrow ? 'Next · tomorrow' : 'Next prayer'} />
+          <Chip variant="photo" live label={L.t(tomorrow ? 'home.nextTomorrow' : 'home.nextPrayer')} />
           <Chip variant="photo" icon="mapPin" label={loc.city} />
         </View>
 
         <View style={{ gap: 14 }}>
           <View>
             <Txt style={styles.name} color={onPhoto.text}>
-              {prayerLabel(key, schedule.next.tomorrow ? addDays(schedule.day, 1) : schedule.day)}
+              {L.prayer(key, schedule.next.tomorrow ? addDays(schedule.day, 1) : schedule.day)}
             </Txt>
             <View style={styles.timeRow}>
               <Txt variant="display" color={onPhoto.text} tabular>
@@ -64,14 +64,14 @@ export function NextPrayerHero() {
 
           <View style={[styles.row, { alignItems: 'center' }]}>
             <View style={{ flexDirection: 'row', gap: 8, flexShrink: 1, flexWrap: 'wrap' }}>
-              <Chip variant="photo" label={`in ${formatCountdown(at.getTime() - now.getTime())}`} />
-              <Chip variant="photo" icon="sunrise" label={`Sunrise ${sunrise.hm}`} />
+              <Chip variant="photo" label={L.t('time.in', { t: L.countdown(at.getTime() - now.getTime()) })} />
+              <Chip variant="photo" icon="sunrise" label={L.t('home.sunriseAt', { t: sunrise.hm })} />
             </View>
-            <IconButton icon="bell" label="Adhan alert is on" variant="photo" size={42} />
+            <IconButton icon="bell" label={L.t('home.adhanOn')} variant="photo" size={42} />
           </View>
 
           <Txt variant="micro" color={onPhoto.textSoft}>
-            {METHOD_LABEL[prefs.method]} method · {prefs.madhab} Asr
+            {L.t('home.methodLine', { method: L.t(`method.${prefs.method}`), madhab: L.t(`madhab.${prefs.madhab}`) })}
           </Txt>
         </View>
       </View>

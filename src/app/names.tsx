@@ -7,12 +7,14 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Txt } from '@/components/Txt';
 import { NAMES_99 } from '@/data/names';
 import { QURAN_EXCERPTS } from '@/data/quranExcerpts';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 export default function NamesScreen() {
   const t = useTheme();
+  const L = useT();
   const [query, setQuery] = useState('');
   const list = useMemo(() => {
     const q = norm(query);
@@ -21,7 +23,7 @@ export default function NamesScreen() {
 
   return (
     <Screen gap={16}>
-      <ScreenHeader title="99 Names of Allah" subtitle="Al-Asma’ al-Husna" />
+      <ScreenHeader title={L.t('names.title')} subtitle={L.t('names.subtitle')} />
       <Glass strong radius={24} padding={16}>
         <Txt variant="quran" style={{ textAlign: 'center', fontSize: 24, lineHeight: 50 }}>
           {QURAN_EXCERPTS.names.ar}
@@ -30,12 +32,12 @@ export default function NamesScreen() {
           “{QURAN_EXCERPTS.names.en}” ({QURAN_EXCERPTS.names.ref})
         </Txt>
       </Glass>
-      <Field icon="search" placeholder="Search by name or meaning" value={query} onChangeText={setQuery} autoCorrect={false} />
+      <Field icon="search" placeholder={L.t('names.searchPh')} value={query} onChangeText={setQuery} autoCorrect={false} />
       <Glass radius={24} padding={0} style={{ paddingHorizontal: 14 }}>
         {list.map((n, i) => (
           <View key={n.n} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: i < list.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
             <Txt variant="caption" tone="muted" tabular style={{ width: 26 }}>
-              {n.n}
+              {L.num(n.n)}
             </Txt>
             <View style={{ flex: 1 }}>
               <Txt variant="title">{n.tr}</Txt>
@@ -50,7 +52,7 @@ export default function NamesScreen() {
         ))}
       </Glass>
       <Txt variant="micro" tone="muted" style={{ textAlign: 'center' }}>
-        Names and meanings from api.aladhan.com. Scholars differ slightly in how the list is compiled.
+        {L.t('names.source')}
       </Txt>
     </Screen>
   );

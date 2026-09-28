@@ -7,18 +7,21 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Txt } from '@/components/Txt';
 import { SHAHADAH } from '@/data/phrases';
 import { onPhoto } from '@/theme/tokens';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const PHOTO = require('../../assets/images/sunset-istanbul.jpg');
 
 export default function ShahadahScreen() {
   const t = useTheme();
+  const L = useT();
+  const bn = L.lang === 'bn';
   return (
     <Screen gap={16}>
       <ScreenHeader
-        title="Shahadah"
-        subtitle="The declaration of faith"
-        right={<IconButton icon="share" label="Share the Shahadah" onPress={() => Share.share({ message: `${SHAHADAH.ar}\n\n${SHAHADAH.en}` }).catch(() => {})} />}
+        title={L.t('shahadah.title')}
+        subtitle={L.t('shahadah.subtitle')}
+        right={<IconButton icon="share" label={L.t('shahadah.share')} onPress={() => Share.share({ message: `${SHAHADAH.ar}\n\n${SHAHADAH.en}` }).catch(() => {})} />}
       />
       <View style={{ borderRadius: 30, overflow: 'hidden', minHeight: 360, justifyContent: 'center', padding: 22, boxShadow: t.shadow }}>
         <Image source={PHOTO} resizeMode="cover" style={StyleSheet.absoluteFill} />
@@ -29,14 +32,14 @@ export default function ShahadahScreen() {
       </View>
       <Glass radius={26} padding={18} style={{ gap: 12 }}>
         <Txt variant="eyebrow" tone="muted">
-          Pronunciation
+          {L.t('shahadah.pron')}
         </Txt>
         <Txt variant="body" style={{ fontStyle: 'italic' }}>
-          {SHAHADAH.tr}
+          {bn ? SHAHADAH.trBn : SHAHADAH.tr}
         </Txt>
         <View style={{ height: 1, backgroundColor: t.line }} />
         <Txt variant="eyebrow" tone="muted">
-          Meaning
+          {L.t('shahadah.meaning')}
         </Txt>
         <Txt variant="body" tone="soft">
           {SHAHADAH.en}
@@ -46,7 +49,7 @@ export default function ShahadahScreen() {
         </Txt>
       </Glass>
       <Txt variant="caption" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 12 }}>
-        The first pillar of Islam. Saying it sincerely, understanding its meaning and acting upon it, is the foundation of faith.
+        {L.t('shahadah.note')}
       </Txt>
     </Screen>
   );

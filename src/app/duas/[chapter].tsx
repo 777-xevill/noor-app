@@ -7,10 +7,12 @@ import { Txt } from '@/components/Txt';
 import { DUA_CHAPTERS } from '@/data/duaChapters';
 import { DuaCard } from '@/features/duas/DuaCard';
 import { useDuas } from '@/features/duas/data';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 export default function DuaChapterScreen() {
   const t = useTheme();
+  const L = useT();
   const { chapter } = useLocalSearchParams<{ chapter: string }>();
   const id = Number(chapter);
   const info = DUA_CHAPTERS.find((c) => c.id === id);
@@ -19,10 +21,10 @@ export default function DuaChapterScreen() {
 
   return (
     <Screen gap={14}>
-      <ScreenHeader title={info?.title ?? 'Duas'} subtitle={`Hisnul Muslim · chapter ${id}`} />
+      <ScreenHeader title={info?.title ?? L.t('duas.title')} subtitle={L.t('duas.chapterN', { n: id })} />
       {error ? (
         <Txt variant="body" tone="muted">
-          These duas couldn’t be loaded. {error.message}
+          {L.t('duas.cantLoad')} {error.message}
         </Txt>
       ) : !c ? (
         <ActivityIndicator color={t.textMuted} style={{ marginTop: 30 }} />
@@ -34,7 +36,7 @@ export default function DuaChapterScreen() {
             </Reveal>
           ))}
           <Txt variant="micro" tone="muted" style={{ textAlign: 'center', marginTop: 6 }}>
-            From Hisnul Muslim (Fortress of the Muslim) by Sa’id ibn Ali ibn Wahf al-Qahtani. The book’s footnotes give the hadith source for each dua.
+            {L.t('duas.footer')}
           </Txt>
         </View>
       )}

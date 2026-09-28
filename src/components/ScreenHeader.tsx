@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
+import { useT } from '@/i18n';
 import { IconButton } from './IconButton';
 import { Txt } from './Txt';
 
@@ -11,9 +12,10 @@ export function goBack() {
 
 /** Title row for screens pushed on top of the tabs: back, title, optional actions. */
 export function ScreenHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+  const { t } = useT();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 }}>
-      <IconButton icon="chevronLeft" label="Back" onPress={goBack} />
+      <IconButton icon="chevronLeft" label={t('common.back')} onPress={goBack} />
       <View style={{ flex: 1 }}>
         <Txt variant="h2" numberOfLines={1}>
           {title}

@@ -9,6 +9,7 @@ import { Segmented } from '@/components/Segmented';
 import { Txt } from '@/components/Txt';
 import { computeZakat, GRAMS_PER_TOLA, NISAB_GRAMS, useZakat, type ZakatInputs } from '@/features/zakat/store';
 import { fonts } from '@/theme/fonts';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const CURRENCIES = ['BDT', 'USD', 'GBP', 'EUR', 'SAR', 'AED', 'INR', 'PKR', 'MYR'];
@@ -47,15 +48,17 @@ function MoneyRow({ label, hint, field, suffix }: { label: string; hint?: string
 
 export default function ZakatScreen() {
   const t = useTheme();
+  const L = useT();
   const z = useZakat();
   const r = computeZakat(z);
-  const unitLabel = z.unit === 'tola' ? 'bhori' : 'g';
-  const money = (v: number) => `${z.currency} ${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-  const nisabWeight = z.unit === 'tola' ? `${z.basis === 'gold' ? '7.5' : '52.5'} bhori` : `${NISAB_GRAMS[z.basis].toFixed(2)} g`;
+  const unitLabel = L.t(z.unit === 'tola' ? 'zakat.unit.tola' : 'zakat.unit.gram');
+  const metal = L.t(z.basis === 'gold' ? 'zakat.metal.gold' : 'zakat.metal.silver');
+  const money = (v: number) => `${z.currency} ${L.num(v.toLocaleString('en-US', { maximumFractionDigits: 2 }))}`;
+  const nisabWeight = `${L.num(z.unit === 'tola' ? (z.basis === 'gold' ? '7.5' : '52.5') : NISAB_GRAMS[z.basis].toFixed(2))} ${unitLabel}`;
 
   return (
     <Screen gap={16}>
-      <ScreenHeader title="Zakat" subtitle="2.5% of qualifying wealth above nisab" />
+      <ScreenHeader title={L.t('zakat.title')} subtitle={L.t('zakat.subtitle')} />
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
         {CURRENCIES.map((c) => (
@@ -66,57 +69,57 @@ export default function ZakatScreen() {
       </ScrollView>
 
       <Glass radius={26} padding={16} style={{ gap: 12 }}>
-        <Txt variant="title">Nisab</Txt>
+        <Txt variant="title">{L.t('zakat.nisab')}</Txt>
         <Segmented
           value={z.basis}
           onChange={(basis) => z.set({ basis })}
           options={[
-            { value: 'silver', label: 'Silver · 52.5 bhori' },
-            { value: 'gold', label: 'Gold · 7.5 bhori' },
+            { value: 'silver', label: L.t('zakat.silver') },
+            { value: 'gold', label: L.t('zakat.gold') },
           ]}
         />
         <Segmented
           value={z.unit}
           onChange={(unit) => z.set({ unit })}
           options={[
-            { value: 'tola', label: 'Bhori / tola' },
-            { value: 'gram', label: 'Grams' },
+            { value: 'tola', label: L.t('zakat.unitTola') },
+            { value: 'gram', label: L.t('zakat.unitGram') },
           ]}
         />
         <Txt variant="caption" tone="muted">
-          Many scholars advise the silver nisab when your wealth is mostly cash, as it reaches more people in need. 1 bhori (tola) = {GRAMS_PER_TOLA} g.
+          {L.t('zakat.silverAdvice', { g: GRAMS_PER_TOLA })}
         </Txt>
-        <MoneyRow label="Gold price" hint={`Today’s price per ${unitLabel}`} field="goldPrice" suffix={z.currency} />
-        <MoneyRow label="Silver price" hint={`Today’s price per ${unitLabel}`} field="silverPrice" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.goldPrice')} hint={L.t('zakat.pricePer', { unit: unitLabel })} field="goldPrice" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.silverPrice')} hint={L.t('zakat.pricePer', { unit: unitLabel })} field="silverPrice" suffix={z.currency} />
       </Glass>
 
       <Glass radius={26} padding={16} style={{ gap: 4 }}>
         <Txt variant="title" style={{ marginBottom: 4 }}>
-          What you own
+          {L.t('zakat.own')}
         </Txt>
-        <MoneyRow label="Cash in hand" field="cash" suffix={z.currency} />
-        <MoneyRow label="Bank and mobile accounts" hint="Including bKash, Nagad, savings" field="bank" suffix={z.currency} />
-        <MoneyRow label="Gold" hint="Weight, including jewellery*" field="goldWeight" suffix={unitLabel} />
-        <MoneyRow label="Silver" hint="Weight" field="silverWeight" suffix={unitLabel} />
-        <MoneyRow label="Business stock" hint="Goods for sale, at sale value" field="business" suffix={z.currency} />
-        <MoneyRow label="Shares and investments" field="investments" suffix={z.currency} />
-        <MoneyRow label="Money owed to you" hint="Only if you expect it back" field="receivable" suffix={z.currency} />
-        <MoneyRow label="Other savings" field="other" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.cash')} field="cash" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.bank')} hint={L.t('zakat.bankHint')} field="bank" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.goldW')} hint={L.t('zakat.goldHint')} field="goldWeight" suffix={unitLabel} />
+        <MoneyRow label={L.t('zakat.silverW')} hint={L.t('zakat.silverHint')} field="silverWeight" suffix={unitLabel} />
+        <MoneyRow label={L.t('zakat.business')} hint={L.t('zakat.businessHint')} field="business" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.investments')} field="investments" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.receivable')} hint={L.t('zakat.receivableHint')} field="receivable" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.other')} field="other" suffix={z.currency} />
       </Glass>
 
       <Glass radius={26} padding={16} style={{ gap: 4 }}>
         <Txt variant="title" style={{ marginBottom: 4 }}>
-          What you owe
+          {L.t('zakat.owe')}
         </Txt>
-        <MoneyRow label="Debts and bills due now" field="debts" suffix={z.currency} />
+        <MoneyRow label={L.t('zakat.debts')} field="debts" suffix={z.currency} />
       </Glass>
 
       <Glass strong radius={28} padding={20} style={{ gap: 10 }}>
         {[
-          ['Total assets', money(r.assets)],
-          ['Less debts', money(r.debts)],
-          ['Net wealth', money(r.net)],
-          ['Nisab threshold', r.nisab === null ? `Enter ${z.basis} price` : `${money(r.nisab)} (${nisabWeight})`],
+          [L.t('zakat.totalAssets'), money(r.assets)],
+          [L.t('zakat.lessDebts'), money(r.debts)],
+          [L.t('zakat.net'), money(r.net)],
+          [L.t('zakat.threshold'), r.nisab === null ? L.t('zakat.enterPrice', { metal }) : `${money(r.nisab)} (${nisabWeight})`],
         ].map(([k, v]) => (
           <View key={k} style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
             <Txt variant="body" tone="soft">
@@ -129,21 +132,21 @@ export default function ZakatScreen() {
         ))}
         <View style={{ height: 1, backgroundColor: t.line, marginVertical: 4 }} />
         <Txt variant="eyebrow" tone="muted">
-          Zakat due
+          {L.t('zakat.due')}
         </Txt>
         <Txt variant="h1" tabular>
           {money(r.due)}
         </Txt>
         <Txt variant="caption" tone="soft">
           {r.nisab === null
-            ? `Add today’s ${z.basis} price to check your wealth against nisab.`
+            ? L.t('zakat.addPrice', { metal })
             : r.net >= r.nisab
-              ? 'Your net wealth is above nisab. Zakat is 2.5% of it, once a full Hijri year has passed.'
-              : 'Your net wealth is below nisab, so no Zakat is due on it.'}
+              ? L.t('zakat.above')
+              : L.t('zakat.below')}
         </Txt>
         {(r.missingGoldPrice || r.missingSilverPrice) && (
           <Txt variant="caption" tone="soft">
-            Add the {r.missingGoldPrice ? 'gold' : 'silver'} price so your {r.missingGoldPrice ? 'gold' : 'silver'} is counted.
+            {L.t('zakat.missingPrice', { metal: L.t(r.missingGoldPrice ? 'zakat.metal.gold' : 'zakat.metal.silver') })}
           </Txt>
         )}
       </Glass>
@@ -151,15 +154,13 @@ export default function ZakatScreen() {
       <Glass radius={22} padding={14} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
         <Icon name="info" size={18} color={t.textSoft} />
         <Txt variant="caption" tone="soft" style={{ flex: 1 }}>
-          Zakat is due when your net wealth stays at or above nisab for one full lunar (Hijri) year. Your home, car, furniture and personal items are not counted.
-          {'\n\n'}*Hanafi scholars count gold and silver jewellery; other schools exempt jewellery worn for personal use.
-          {'\n\n'}Crops, livestock and business partnerships have separate Zakat rules and aren’t calculated here. For your situation, consult a scholar.
+          {L.t('zakat.notes')}
         </Txt>
       </Glass>
 
       <Press onPress={z.reset} style={{ alignSelf: 'center', padding: 8 }} accessibilityRole="button">
         <Txt variant="caption" tone="soft">
-          Clear all amounts
+          {L.t('zakat.clear')}
         </Txt>
       </Press>
     </Screen>

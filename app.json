@@ -27,7 +27,8 @@
       "expo-router",
       "expo-font",
       "expo-asset",
-      "expo-audio"
+      "expo-audio",
+      "expo-localization"
     ],
     "scheme": "noor",
     "experiments": {

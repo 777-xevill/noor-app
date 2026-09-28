@@ -9,11 +9,12 @@ import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
 import { Txt } from '@/components/Txt';
-import { fromDayKey, longDate } from '@/lib/dates';
+import { fromDayKey } from '@/lib/dates';
+import { useT } from '@/i18n';
 import { useFasting } from '@/features/fasting/store';
 import { DEEDS, EMPTY_ENTRY, EXTRAS, MOODS, toggleIn, useJournal } from '@/features/journal/store';
 import { usePrayerLog } from '@/features/prayer/log';
-import { prayerLabel, PRAYERS, type PrayerKey } from '@/features/prayer/times';
+import { PRAYERS, type PrayerKey } from '@/features/prayer/times';
 import { fonts } from '@/theme/fonts';
 import { useTheme } from '@/theme/useTheme';
 
@@ -69,6 +70,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function JournalEntryScreen() {
   const t = useTheme();
+  const L = useT();
   const { date } = useLocalSearchParams<{ date: string }>();
   const day = fromDayKey(date);
   const entry = useJournal((s) => s.entries[date] ?? EMPTY_ENTRY);
@@ -80,24 +82,24 @@ export default function JournalEntryScreen() {
 
   return (
     <Screen gap={14}>
-      <ScreenHeader title="Journal entry" subtitle={longDate(day)} />
+      <ScreenHeader title={L.t('journal.entry')} subtitle={L.longDate(day)} />
 
-      <Section title="What’s on your heart today?">
+      <Section title={L.t('journal.heart')}>
         <TextInput
           value={entry.reflection}
           onChangeText={(reflection) => update(date, { reflection })}
-          placeholder="A thought, a blessing, a dua, a lesson…"
+          placeholder={L.t('journal.heartPh')}
           placeholderTextColor={t.textMuted}
           multiline
           maxLength={MAX}
           style={{ minHeight: 120, fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: t.text, textAlignVertical: 'top' }}
         />
         <Txt variant="micro" tone="muted" style={{ textAlign: 'right' }} tabular>
-          {entry.reflection.length}/{MAX}
+          {L.num(`${entry.reflection.length}/${MAX}`)}
         </Txt>
       </Section>
 
-      <Section title="How do you feel?">
+      <Section title={L.t('journal.feel')}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {MOODS.map((m) => (
             <Press
@@ -110,41 +112,41 @@ export default function JournalEntryScreen() {
                 update(date, { moods: toggleIn(entry.moods, m.key) });
               }}
             >
-              <Chip variant={entry.moods.includes(m.key) ? 'ink' : 'glass'} label={m.label} />
+              <Chip variant={entry.moods.includes(m.key) ? 'ink' : 'glass'} label={L.t(m.label)} />
             </Press>
           ))}
         </View>
       </Section>
 
-      <Section title="Prayers">
+      <Section title={L.t('journal.prayers')}>
         {PRAYERS.map(({ key }) => (
-          <CheckRow key={key} label={prayerLabel(key, day)} checked={prayers.includes(key)} onToggle={() => togglePrayer(date, key)} />
+          <CheckRow key={key} label={L.prayer(key, day)} checked={prayers.includes(key)} onToggle={() => togglePrayer(date, key)} />
         ))}
         {EXTRAS.map((x) => (
-          <CheckRow key={x.key} label={x.label} checked={entry.extras.includes(x.key)} onToggle={() => update(date, { extras: toggleIn(entry.extras, x.key) })} />
+          <CheckRow key={x.key} label={L.t(x.label)} checked={entry.extras.includes(x.key)} onToggle={() => update(date, { extras: toggleIn(entry.extras, x.key) })} />
         ))}
       </Section>
 
-      <Section title="Fasting">
+      <Section title={L.t('journal.fasting')}>
         <Segmented
           value={fast ?? 'none'}
           onChange={(v) => setFast(date, v === 'none' ? null : v)}
           options={[
-            { value: 'none', label: 'Not fasting' },
-            { value: 'fasted', label: 'Fasted' },
-            { value: 'missed', label: 'Missed' },
+            { value: 'none', label: L.t('fast.none') },
+            { value: 'fasted', label: L.t('fast.fasted') },
+            { value: 'missed', label: L.t('fast.missed') },
           ]}
         />
       </Section>
 
-      <Section title="Good deeds">
+      <Section title={L.t('journal.deeds')}>
         {DEEDS.map((d) => (
-          <CheckRow key={d.key} label={d.label} checked={entry.deeds.includes(d.key)} onToggle={() => update(date, { deeds: toggleIn(entry.deeds, d.key) })} />
+          <CheckRow key={d.key} label={L.t(d.label)} checked={entry.deeds.includes(d.key)} onToggle={() => update(date, { deeds: toggleIn(entry.deeds, d.key) })} />
         ))}
       </Section>
 
       <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-        Saved automatically, privately on this device.
+        {L.t('common.saved')}
       </Txt>
     </Screen>
   );

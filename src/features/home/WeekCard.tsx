@@ -6,12 +6,13 @@ import { Txt } from '@/components/Txt';
 import { addDays, dayKey, weekdayMon0 } from '@/lib/dates';
 import { usePrayerLog } from '@/features/prayer/log';
 import { useSchedule } from '@/features/prayer/useSchedule';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
-
-const LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export function WeekCard() {
   const t = useTheme();
+  const L = useT();
+  const LETTERS = [0, 1, 2, 3, 4, 5, 6].map((d) => L.t(`wd.${d}` as 'wd.0'));
   const { schedule } = useSchedule(60_000);
   const days = usePrayerLog((s) => s.days);
   const today = schedule.day;
@@ -36,12 +37,12 @@ export function WeekCard() {
     <Glass radius={26} padding={16} style={{ gap: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
         <View style={{ flexShrink: 1 }}>
-          <Txt variant="title">This week</Txt>
+          <Txt variant="title">{L.t('home.thisWeek')}</Txt>
           <Txt variant="caption" tone="muted" tabular>
-            {total} of {possible} prayers so far
+            {L.t('home.prayersSoFar', { done: total, possible })}
           </Txt>
         </View>
-        {streak > 0 && <Chip variant="ink" label={`${streak}-day streak`} />}
+        {streak > 0 && <Chip variant="ink" label={L.t('home.streak', { n: streak })} />}
       </View>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -61,7 +62,7 @@ export function WeekCard() {
               }}
             >
               <Txt variant="bodyStrong" tone={isToday ? 'onInk' : isFuture ? 'muted' : 'default'} tabular>
-                {day.d}
+                {L.num(day.d)}
               </Txt>
             </View>
             <View style={{ opacity: isFuture ? 0.45 : 1 }}>

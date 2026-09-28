@@ -2,33 +2,35 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { persistStorage } from '@/lib/storage';
 
+// `label` values are translation keys.
+
 export const MOODS = [
-  { key: 'grateful', label: 'Grateful' },
-  { key: 'peaceful', label: 'At peace' },
-  { key: 'hopeful', label: 'Hopeful' },
-  { key: 'patient', label: 'Patient' },
-  { key: 'repentant', label: 'Repentant' },
-  { key: 'anxious', label: 'Anxious' },
-  { key: 'sad', label: 'Low' },
+  { key: 'grateful', label: 'mood.grateful' },
+  { key: 'peaceful', label: 'mood.peaceful' },
+  { key: 'hopeful', label: 'mood.hopeful' },
+  { key: 'patient', label: 'mood.patient' },
+  { key: 'repentant', label: 'mood.repentant' },
+  { key: 'anxious', label: 'mood.anxious' },
+  { key: 'sad', label: 'mood.sad' },
 ] as const;
 
 export const EXTRAS = [
-  { key: 'morningAdhkar', label: 'Morning adhkar' },
-  { key: 'eveningAdhkar', label: 'Evening adhkar' },
-  { key: 'duha', label: 'Duha prayer' },
-  { key: 'witr', label: 'Witr' },
-  { key: 'tahajjud', label: 'Tahajjud' },
+  { key: 'morningAdhkar', label: 'extra.morningAdhkar' },
+  { key: 'eveningAdhkar', label: 'extra.eveningAdhkar' },
+  { key: 'duha', label: 'extra.duha' },
+  { key: 'witr', label: 'extra.witr' },
+  { key: 'tahajjud', label: 'extra.tahajjud' },
 ] as const;
 
 export const DEEDS = [
-  { key: 'charity', label: 'Gave charity' },
-  { key: 'helped', label: 'Helped someone' },
-  { key: 'family', label: 'Kept in touch with family' },
-  { key: 'kindWord', label: 'Said a kind word' },
-  { key: 'smiled', label: 'Smiled at someone' },
-  { key: 'learned', label: 'Learned something beneficial' },
-  { key: 'forgave', label: 'Forgave someone' },
-  { key: 'removedHarm', label: 'Removed something harmful from a path' },
+  { key: 'charity', label: 'deed.charity' },
+  { key: 'helped', label: 'deed.helped' },
+  { key: 'family', label: 'deed.family' },
+  { key: 'kindWord', label: 'deed.kindWord' },
+  { key: 'smiled', label: 'deed.smiled' },
+  { key: 'learned', label: 'deed.learned' },
+  { key: 'forgave', label: 'deed.forgave' },
+  { key: 'removedHarm', label: 'deed.removedHarm' },
 ] as const;
 
 export type MoodKey = (typeof MOODS)[number]['key'];

@@ -18,18 +18,23 @@ function nearestCity(lat: number, lng: number) {
   return { city: best, km: bestKm };
 }
 
-export class LocationError extends Error {}
+/** `code` lets each screen explain the problem in the user's language. */
+export class LocationError extends Error {
+  constructor(public code: 'denied' | 'unavailable') {
+    super(code);
+  }
+}
 
 /** Ask for permission, read the device position and describe it as a prayer location. */
-export async function locateDevice(): Promise<PrayerLocation> {
+export async function locateDevice(fallbackName = 'Current location'): Promise<PrayerLocation> {
   const perm = await Location.requestForegroundPermissionsAsync();
-  if (!perm.granted) throw new LocationError('Location access wasn’t allowed. You can choose your city from the list instead.');
+  if (!perm.granted) throw new LocationError('denied');
 
   let pos: Location.LocationObject | null = null;
   try {
     pos = (await Location.getLastKnownPositionAsync({ maxAge: 30 * 60_000 })) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
   } catch {
-    throw new LocationError('Your position couldn’t be found. Make sure location is turned on, or choose your city from the list.');
+    throw new LocationError('unavailable');
   }
   const { latitude, longitude } = pos.coords;
 
@@ -54,7 +59,7 @@ export async function locateDevice(): Promise<PrayerLocation> {
   }
 
   return {
-    city: city || 'Current location',
+    city: city || fallbackName,
     country,
     cc,
     latitude: Math.round(latitude * 10_000) / 10_000,

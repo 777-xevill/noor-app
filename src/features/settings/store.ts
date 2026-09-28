@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { persistStorage } from '@/lib/storage';
+import { deviceLang, type Lang } from '@/i18n/langs';
 import {
   type AsrMadhab,
   type CalcMethod,
@@ -28,6 +29,7 @@ export type QuranPrefs = { showTranslit: boolean; showEnglish: boolean; showBang
 
 type SettingsState = PrayerPrefs & {
   themeMode: ThemeMode;
+  language: Lang;
   displayName: string;
   onboarded: boolean;
   location: PrayerLocation;
@@ -50,6 +52,7 @@ const NO_ADJUSTMENTS: Record<AdjustableTime, number> = { fajr: 0, sunrise: 0, dh
 const DEFAULTS = {
   // Light "Mist" is the signature look; dark stays one tap away.
   themeMode: 'light' as ThemeMode,
+  language: deviceLang(),
   displayName: '',
   onboarded: false,
   location: DEFAULT_LOCATION,

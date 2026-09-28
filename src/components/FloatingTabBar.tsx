@@ -18,16 +18,18 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tabBarCompactTarget } from '@/lib/scrollChrome';
 import { spring, timing } from '@/theme/motion';
+import { useT } from '@/i18n';
+import type { Key } from '@/i18n/en';
 import { useTheme } from '@/theme/useTheme';
 import { Icon, type IconName } from './Icon';
 import { Press } from './Press';
 import { Txt } from './Txt';
 
-const TABS: Record<string, { label: string; icon: IconName }> = {
-  index: { label: 'Home', icon: 'home' },
-  prayers: { label: 'Prayers', icon: 'mosque' },
-  quran: { label: 'Quran', icon: 'book' },
-  explore: { label: 'Explore', icon: 'grid' },
+const TABS: Record<string, { label: Key; icon: IconName }> = {
+  index: { label: 'tab.home', icon: 'home' },
+  prayers: { label: 'tab.prayers', icon: 'mosque' },
+  quran: { label: 'tab.quran', icon: 'book' },
+  explore: { label: 'tab.explore', icon: 'grid' },
 };
 
 const PAD = 6; // inset of the selection pill inside the bar
@@ -108,6 +110,7 @@ function TabItem({
 
 export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
   const t = useTheme();
+  const { t: tr } = useT();
   const insets = useSafeAreaInsets();
   const routes = state.routes.filter((r) => TABS[r.name]);
   const active = routes.findIndex((r) => r.key === state.routes[state.index]?.key);
@@ -173,7 +176,8 @@ export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             // Tapping the bar always brings it back to full size.
             tabBarCompactTarget.value = 0;
           };
-          return <TabItem key={route.key} tab={TABS[route.name]} focused={focused} compact={compact} onPress={onPress} />;
+          const tab = TABS[route.name];
+          return <TabItem key={route.key} tab={{ label: tr(tab.label), icon: tab.icon }} focused={focused} compact={compact} onPress={onPress} />;
         })}
       </Animated.View>
     </View>

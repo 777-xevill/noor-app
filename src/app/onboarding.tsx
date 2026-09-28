@@ -6,13 +6,14 @@ import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Field } from '@/components/Field';
 import { Glass } from '@/components/Glass';
-import { Icon } from '@/components/Icon';
+import { Icon, type IconName } from '@/components/Icon';
 import { Press } from '@/components/Press';
 import { Canvas } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { CITIES, type City } from '@/data/cities';
-import { locateDevice } from '@/features/prayer/deviceLocation';
-import { METHOD_LABEL } from '@/features/prayer/location';
+import { LANGS, useT } from '@/i18n';
+import type { Key } from '@/i18n/en';
+import { LocationError, locateDevice } from '@/features/prayer/deviceLocation';
 import { alertsSupported, requestAlertPermission } from '@/features/prayer/notifications';
 import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
@@ -20,7 +21,7 @@ import { GUTTER, onPhoto } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
 
 const PHOTO = require('../../assets/images/dome-ubudiah.jpg');
-const STEPS = 4;
+const STEPS = 5; // language · welcome · name · location · alerts
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 function PrimaryButton({ label, onPress, busy }: { label: string; onPress: () => void; busy?: boolean }) {
@@ -44,8 +45,15 @@ function TextButton({ label, onPress }: { label: string; onPress: () => void }) 
   );
 }
 
+const POINTS: [IconName, Key][] = [
+  ['mosque', 'ob.point1'],
+  ['book', 'ob.point2'],
+  ['shield', 'ob.point3'],
+];
+
 export default function OnboardingScreen() {
   const t = useTheme();
+  const L = useT();
   const insets = useSafeAreaInsets();
   const s = useSettings();
   const [step, setStep] = useState(0);
@@ -77,10 +85,10 @@ export default function OnboardingScreen() {
     setBusy(true);
     setMessage(null);
     try {
-      s.setLocation(await locateDevice(), true);
+      s.setLocation(await locateDevice(L.t('loc.current.fallback')), true);
       next();
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Your location couldn’t be found.');
+      setMessage(L.t(e instanceof LocationError && e.code === 'denied' ? 'loc.errDenied' : 'loc.errUnavailable'));
     } finally {
       setBusy(false);
     }
@@ -91,7 +99,10 @@ export default function OnboardingScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.canvas }}>
       <Canvas />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: GUTTER, gap: 18 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: GUTTER, gap: 18 }}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Progress */}
         <View style={{ flexDirection: 'row', gap: 6, alignSelf: 'center', marginTop: 6 }}>
           {Array.from({ length: STEPS }, (_, i) => (
@@ -102,62 +113,96 @@ export default function OnboardingScreen() {
         <Animated.View key={step} entering={enter} style={{ flex: 1, gap: 18 }}>
           {step === 0 && (
             <>
-              <View style={{ height: 360, borderRadius: 32, overflow: 'hidden', justifyContent: 'flex-end', padding: 22, boxShadow: t.shadow }}>
-                <Image source={PHOTO} resizeMode="cover" style={StyleSheet.absoluteFill} />
-                <LinearGradient colors={onPhoto.scrim} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
-                <Txt variant="eyebrow" color={onPhoto.textSoft}>
-                  Welcome to Noor
-                </Txt>
-                <Txt style={{ fontFamily: fonts.bold, fontSize: 38, lineHeight: 42, letterSpacing: -1.4, color: onPhoto.text }}>Assalamu alaikum</Txt>
-              </View>
-              <Txt variant="body" tone="soft" style={{ fontSize: 17, lineHeight: 26 }}>
-                Prayer times you can trust, the Quran in Arabic, English and Bangla, and the daily adhkar, calm and free of clutter.
+              <Txt variant="h1">{L.t('ob.language')}</Txt>
+              <Txt variant="body" tone="muted">
+                {L.t('ob.languageSub')}
               </Txt>
               <View style={{ gap: 10 }}>
-                {[
-                  ['mosque', 'Accurate prayer times and alerts for your city'],
-                  ['book', 'The full Quran, offline, with recitation'],
-                  ['shield', 'Private: your data stays on your phone'],
-                ].map(([icon, text]) => (
-                  <View key={text} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <Icon name={icon as 'mosque'} size={20} color={t.text} />
-                    <Txt variant="body">{text}</Txt>
-                  </View>
-                ))}
+                {LANGS.map((lang) => {
+                  const selected = s.language === lang.code;
+                  return (
+                    <Press key={lang.code} onPress={() => s.set({ language: lang.code })} scaleTo={0.98} accessibilityRole="radio" accessibilityState={{ selected }}>
+                      <Glass
+                        strong={selected}
+                        radius={22}
+                        padding={18}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, borderColor: selected ? t.ink : t.glassBorder, borderWidth: selected ? 1.5 : 1 }}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Txt variant="h2">{lang.name}</Txt>
+                          {lang.name !== lang.english && (
+                            <Txt variant="caption" tone="muted">
+                              {lang.english}
+                            </Txt>
+                          )}
+                        </View>
+                        {selected && <Icon name="circleCheck" size={22} color={t.ink} />}
+                      </Glass>
+                    </Press>
+                  );
+                })}
               </View>
               <View style={{ flex: 1 }} />
-              <PrimaryButton label="Bismillah, let’s begin" onPress={next} />
+              <PrimaryButton label={L.t('common.continue')} onPress={next} />
             </>
           )}
 
           {step === 1 && (
             <>
-              <Txt variant="h1">What should we call you?</Txt>
-              <Txt variant="body" tone="muted">
-                Used only to greet you in the app.
+              <View style={{ height: 360, borderRadius: 32, overflow: 'hidden', justifyContent: 'flex-end', padding: 22, boxShadow: t.shadow }}>
+                <Image source={PHOTO} resizeMode="cover" style={StyleSheet.absoluteFill} />
+                <LinearGradient colors={onPhoto.scrim} locations={[0, 0.35, 1]} style={StyleSheet.absoluteFill} />
+                <Txt variant="eyebrow" color={onPhoto.textSoft}>
+                  {L.t('ob.welcome')}
+                </Txt>
+                <Txt style={{ fontFamily: fonts.bold, fontSize: 38, lineHeight: 46, letterSpacing: L.lang === 'en' ? -1.4 : 0, color: onPhoto.text }}>{L.t('ob.salam')}</Txt>
+              </View>
+              <Txt variant="body" tone="soft" style={{ fontSize: 17, lineHeight: 26 }}>
+                {L.t('ob.intro')}
               </Txt>
-              <Field placeholder="Your name" value={s.displayName} onChangeText={s.setDisplayName} autoCapitalize="words" autoFocus maxLength={40} />
+              <View style={{ gap: 10 }}>
+                {POINTS.map(([icon, key]) => (
+                  <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Icon name={icon} size={20} color={t.text} />
+                    <Txt variant="body" style={{ flex: 1 }}>
+                      {L.t(key)}
+                    </Txt>
+                  </View>
+                ))}
+              </View>
               <View style={{ flex: 1 }} />
-              <PrimaryButton label={s.displayName ? 'Continue' : 'Skip for now'} onPress={next} />
+              <PrimaryButton label={L.t('ob.begin')} onPress={next} />
             </>
           )}
 
           {step === 2 && (
             <>
-              <Txt variant="h1">Where do you pray?</Txt>
+              <Txt variant="h1">{L.t('ob.name')}</Txt>
               <Txt variant="body" tone="muted">
-                Prayer times and the Qibla are calculated for your location. It never leaves your phone.
+                {L.t('ob.nameSub')}
               </Txt>
-              <PrimaryButton label="Use my current location" onPress={useDevice} busy={busy} />
+              <Field placeholder={L.t('ob.namePh')} value={s.displayName} onChangeText={s.setDisplayName} autoCapitalize="words" autoFocus maxLength={40} />
+              <View style={{ flex: 1 }} />
+              <PrimaryButton label={L.t(s.displayName ? 'common.continue' : 'common.skip')} onPress={next} />
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <Txt variant="h1">{L.t('ob.where')}</Txt>
+              <Txt variant="body" tone="muted">
+                {L.t('ob.whereSub')}
+              </Txt>
+              <PrimaryButton label={L.t('loc.useDevice')} onPress={useDevice} busy={busy} />
               {message ? (
                 <Txt variant="caption" tone="soft">
                   {message}
                 </Txt>
               ) : null}
               <Txt variant="eyebrow" tone="muted" style={{ marginTop: 6 }}>
-                Or choose your city
+                {L.t('ob.orCity')}
               </Txt>
-              <Field icon="search" placeholder="Search city or country" value={query} onChangeText={setQuery} autoCorrect={false} />
+              <Field icon="search" placeholder={L.t('loc.searchPh')} value={query} onChangeText={setQuery} autoCorrect={false} />
               <Glass radius={24} padding={0} style={{ paddingHorizontal: 14 }}>
                 {cities.map((c, i) => (
                   <Press key={`${c.name}-${c.cc}`} onPress={() => pickCity(c)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={`${c.name}, ${c.country}`}>
@@ -173,21 +218,21 @@ export default function OnboardingScreen() {
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
-              <Txt variant="h1">Never miss a prayer</Txt>
+              <Txt variant="h1">{L.t('ob.alerts')}</Txt>
               <Txt variant="body" tone="muted">
-                We’ll remind you when each prayer begins in {s.location.city}. Times use the {METHOD_LABEL[s.method]} method with {s.madhab === 'Hanafi' ? 'Hanafi' : 'standard'} Asr; you can change this any time in Prayer settings.
+                {L.t('ob.alertsSub', { city: s.location.city, method: L.t(`method.${s.method}`), madhab: L.t(`madhab.${s.madhab}`) })}
               </Txt>
               <Glass radius={24} padding={16} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Icon name="bellRing" size={22} color={t.text} />
                 <Txt variant="body" style={{ flex: 1 }}>
-                  Alerts for Fajr, Dhuhr, Asr, Maghrib and Isha
+                  {L.t('ob.alertsList')}
                 </Txt>
               </Glass>
               {!alertsSupported && (
                 <Txt variant="caption" tone="muted">
-                  Alerts work in the phone app.
+                  {L.t('ob.alertsPhone')}
                 </Txt>
               )}
               {message ? (
@@ -197,7 +242,7 @@ export default function OnboardingScreen() {
               ) : null}
               <View style={{ flex: 1 }} />
               <PrimaryButton
-                label={alertsSupported ? 'Allow prayer alerts' : 'Finish'}
+                label={L.t(alertsSupported ? 'ob.allow' : 'common.finish')}
                 busy={busy}
                 onPress={async () => {
                   if (!alertsSupported) return finish();
@@ -205,10 +250,10 @@ export default function OnboardingScreen() {
                   const granted = await requestAlertPermission();
                   setBusy(false);
                   if (granted) finish();
-                  else setMessage('Notifications are off. You can turn them on later in your phone’s Settings.');
+                  else setMessage(L.t('ob.denied'));
                 }}
               />
-              {alertsSupported && <TextButton label="Not now" onPress={finish} />}
+              {alertsSupported && <TextButton label={L.t('common.notNow')} onPress={finish} />}
             </>
           )}
         </Animated.View>

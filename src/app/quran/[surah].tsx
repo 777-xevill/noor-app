@@ -22,6 +22,7 @@ import { useQuranProgress } from '@/features/quran/progress';
 import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
 import { GUTTER } from '@/theme/tokens';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -52,6 +53,7 @@ function AyahRow({
   onPlay: () => void;
 }) {
   const t = useTheme();
+  const L = useT();
   const q = useSettings((s) => s.quran);
   const key = `${surah}:${ayah.n}`;
   const saved = useQuranProgress((s) => s.bookmarks.includes(key));
@@ -74,19 +76,19 @@ function AyahRow({
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ paddingHorizontal: 10, height: 26, borderRadius: 13, backgroundColor: t.pill, justifyContent: 'center' }}>
           <Txt variant="micro" tone="soft" tabular>
-            {key}
+            {L.num(key)}
           </Txt>
         </View>
-        {ayah.sajda && <Chip variant="ink" label="Sajdah" />}
+        {ayah.sajda && <Chip variant="ink" label={L.t('reader.sajdah')} />}
         <View style={{ flex: 1 }} />
-        <Press hitSlop={10} scaleTo={0.82} accessibilityRole="button" accessibilityLabel={playing ? 'Stop recitation' : `Play ayah ${ayah.n}`} onPress={onPlay}>
+        <Press hitSlop={10} scaleTo={0.82} accessibilityRole="button" accessibilityLabel={playing ? L.t('reader.stop') : L.t('reader.play', { n: ayah.n })} onPress={onPlay}>
           <Icon name={playing ? 'pause' : 'play'} size={18} color={t.text} />
         </Press>
         <Press
           hitSlop={10}
           scaleTo={0.82}
           accessibilityRole="button"
-          accessibilityLabel={saved ? 'Remove bookmark' : 'Bookmark ayah'}
+          accessibilityLabel={L.t(saved ? 'reader.unbookmark' : 'reader.bookmark')}
           onPress={() => {
             if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             toggleBookmark(key);
@@ -99,7 +101,7 @@ function AyahRow({
           hitSlop={10}
           scaleTo={0.82}
           accessibilityRole="button"
-          accessibilityLabel="Share ayah"
+          accessibilityLabel={L.t('reader.share')}
           style={{ marginLeft: 14 }}
           onPress={() =>
             Share.share({ message: `${ayah.ar}\n\n${ayah.en}\n\n— ${meta.name} ${key}` }).catch(() => {})
@@ -117,12 +119,18 @@ function AyahRow({
           {ayah.tr}
         </Txt>
       )}
+      {/* The reader's own language comes first. */}
+      {L.lang === 'bn' && q.showBangla && (
+        <Txt variant="body" tone="soft" style={{ fontSize: 16, lineHeight: 26 }}>
+          {ayah.bn}
+        </Txt>
+      )}
       {q.showEnglish && (
         <Txt variant="body" tone="soft">
           {ayah.en}
         </Txt>
       )}
-      {q.showBangla && (
+      {L.lang !== 'bn' && q.showBangla && (
         <Txt variant="body" tone="soft" style={{ fontSize: 16, lineHeight: 26 }}>
           {ayah.bn}
         </Txt>
@@ -133,6 +141,7 @@ function AyahRow({
 
 export default function ReaderScreen() {
   const t = useTheme();
+  const L = useT();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ surah: string; ayah?: string }>();
   const n = Math.min(114, Math.max(1, parseInt(params.surah ?? '1', 10) || 1));
@@ -211,14 +220,14 @@ export default function ReaderScreen() {
         <ScreenHeader
           title={meta.name}
           subtitle={meta.meaning}
-          right={<IconButton icon="textSize" label="Reading settings" onPress={() => setSheetOpen(true)} />}
+          right={<IconButton icon="textSize" label={L.t('reader.settings')} onPress={() => setSheetOpen(true)} />}
         />
         <Glass strong radius={28} padding={22} style={{ alignItems: 'center', gap: 10 }}>
           <Txt variant="arabic" style={{ textAlign: 'center', fontSize: 34, lineHeight: 60 }}>
             {meta.ar}
           </Txt>
           <Txt variant="caption" tone="muted">
-            {meta.type === 'Meccan' ? 'Makki' : 'Madani'} · {meta.ayahs} ayahs · Juz {meta.juz}
+            {L.t('reader.meta', { type: L.t(meta.type === 'Meccan' ? 'quran.makki' : 'quran.madani'), n: meta.ayahs, j: meta.juz })}
           </Txt>
           {n !== 1 && n !== 9 && (
             <>
@@ -230,18 +239,18 @@ export default function ReaderScreen() {
           )}
           {n === 9 && (
             <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-              Surah At-Tawbah is the only surah that does not begin with the Basmala.
+              {L.t('reader.tawbah')}
             </Txt>
           )}
         </Glass>
         {audioError && (
           <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-            The recitation couldn’t be loaded. Check your internet connection and try again.
+            {L.t('reader.audioError')}
           </Txt>
         )}
       </View>
     ),
-    [insets.top, meta, n, t.line, audioError],
+    [insets.top, meta, n, t.line, audioError, L],
   );
 
   const footer = (
@@ -251,7 +260,7 @@ export default function ReaderScreen() {
           <Press style={{ flex: 1 }} onPress={() => router.replace({ pathname: '/quran/[surah]', params: { surah: String(n - 1) } })}>
             <Glass radius={20} padding={14} style={{ gap: 2 }}>
               <Txt variant="micro" tone="muted">
-                Previous
+                {L.t('reader.previous')}
               </Txt>
               <Txt variant="title" numberOfLines={1}>
                 {SURAHS[n - 2].name}
@@ -263,7 +272,7 @@ export default function ReaderScreen() {
           <Press style={{ flex: 1 }} onPress={() => router.replace({ pathname: '/quran/[surah]', params: { surah: String(n + 1) } })}>
             <Glass radius={20} padding={14} style={{ gap: 2, alignItems: 'flex-end' }}>
               <Txt variant="micro" tone="muted">
-                Next
+                {L.t('reader.next')}
               </Txt>
               <Txt variant="title" numberOfLines={1}>
                 {SURAHS[n].name}
@@ -273,7 +282,7 @@ export default function ReaderScreen() {
         )}
       </View>
       <Txt variant="micro" tone="muted" style={{ textAlign: 'center' }}>
-        Arabic: Tanzil Uthmani text · English: Saheeh International · Bangla: Muhiuddin Khan · Recitation: Mishary Alafasy (everyayah.com)
+        {L.t('reader.sources')}
       </Txt>
     </View>
   );
@@ -283,7 +292,7 @@ export default function ReaderScreen() {
       <Canvas />
       {error ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10 }}>
-          <Txt variant="title">This surah couldn’t be opened</Txt>
+          <Txt variant="title">{L.t('reader.cantOpen')}</Txt>
           <Txt variant="body" tone="muted" style={{ textAlign: 'center' }}>
             {error.message}
           </Txt>
@@ -310,13 +319,13 @@ export default function ReaderScreen() {
         />
       )}
 
-      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Reading settings">
+      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={L.t('reader.settings')}>
         <Glass radius={22} padding={16} style={{ gap: 14 }}>
           {(
             [
-              ['showEnglish', 'English translation', 'Saheeh International'],
-              ['showBangla', 'বাংলা অনুবাদ', 'Muhiuddin Khan'],
-              ['showTranslit', 'Transliteration', 'Latin pronunciation guide'],
+              ['showEnglish', L.t('reader.english'), L.t('reader.englishSrc')],
+              ['showBangla', L.t('reader.bangla'), L.t('reader.banglaSrc')],
+              ['showTranslit', L.t('reader.translit'), L.t('reader.translitSrc')],
             ] as const
           ).map(([k, label, source]) => (
             <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -332,10 +341,10 @@ export default function ReaderScreen() {
         </Glass>
         <Glass radius={22} padding={16} style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Txt variant="bodyStrong">Arabic text size</Txt>
+            <Txt variant="bodyStrong">{L.t('reader.arabicSize')}</Txt>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <IconButton icon="minus" label="Smaller Arabic text" size={38} onPress={() => setSettings({ quran: { ...q, arabicSize: Math.max(22, q.arabicSize - 2) } })} />
-              <IconButton icon="plus" label="Larger Arabic text" size={38} onPress={() => setSettings({ quran: { ...q, arabicSize: Math.min(44, q.arabicSize + 2) } })} />
+              <IconButton icon="minus" label={L.t('reader.smaller')} size={38} onPress={() => setSettings({ quran: { ...q, arabicSize: Math.max(22, q.arabicSize - 2) } })} />
+              <IconButton icon="plus" label={L.t('reader.larger')} size={38} onPress={() => setSettings({ quran: { ...q, arabicSize: Math.min(44, q.arabicSize + 2) } })} />
             </View>
           </View>
           <Txt variant="quran" style={{ fontSize: q.arabicSize, lineHeight: Math.round(q.arabicSize * 2.1) }}>

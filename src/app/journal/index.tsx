@@ -10,7 +10,8 @@ import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
 import { Txt } from '@/components/Txt';
-import { addDays, type DayParts, dayKey, daysBetween, longDate } from '@/lib/dates';
+import { addDays, type DayParts, dayKey, daysBetween } from '@/lib/dates';
+import { useT } from '@/i18n';
 import { useFasting } from '@/features/fasting/store';
 import { EXTRAS, hasContent, MOODS, useJournal } from '@/features/journal/store';
 import { usePrayerLog } from '@/features/prayer/log';
@@ -34,6 +35,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 
 export default function JournalScreen() {
   const t = useTheme();
+  const L = useT();
   const { schedule, hijriOffset } = useSchedule(60_000);
   const today = schedule.day;
   const [tab, setTab] = useState<'entries' | 'insights'>('entries');
@@ -67,13 +69,13 @@ export default function JournalScreen() {
 
   return (
     <Screen gap={16}>
-      <ScreenHeader title="Journal" subtitle={streak ? `${streak}-day streak` : 'Reflect on your day'} />
+      <ScreenHeader title={L.t('journal.title')} subtitle={streak ? L.t('journal.streak', { n: streak }) : L.t('journal.reflect')} />
       <Segmented
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'entries', label: 'Entries' },
-          { value: 'insights', label: 'This week' },
+          { value: 'entries', label: L.t('journal.entries') },
+          { value: 'insights', label: L.t('journal.thisWeek') },
         ]}
       />
 
@@ -96,13 +98,13 @@ export default function JournalScreen() {
           />
 
           <Glass radius={26} padding={18} style={{ gap: 12 }}>
-            <Txt variant="title">{longDate(selected)}</Txt>
+            <Txt variant="title">{L.longDate(selected)}</Txt>
             {hasContent(sel) ? (
               <>
                 {sel!.moods.length > 0 && (
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                     {sel!.moods.map((m) => (
-                      <Chip key={m} label={MOODS.find((x) => x.key === m)?.label ?? m} />
+                      <Chip key={m} label={L.t(MOODS.find((x) => x.key === m)?.label ?? 'mood.grateful')} />
                     ))}
                   </View>
                 )}
@@ -112,17 +114,17 @@ export default function JournalScreen() {
                   </Txt>
                 ) : null}
                 <Txt variant="caption" tone="muted">
-                  {sel!.deeds.length} good deeds · {sel!.extras.length} extra acts of worship
+                  {L.t('journal.summary', { deeds: sel!.deeds.length, extras: sel!.extras.length })}
                 </Txt>
               </>
             ) : (
               <Txt variant="body" tone="muted">
-                {future ? 'This day hasn’t come yet.' : 'Nothing written for this day yet.'}
+                {L.t(future ? 'journal.notYet' : 'journal.nothing')}
               </Txt>
             )}
             {!future && (
               <Press onPress={() => openEntry(selected)} accessibilityRole="button" style={{ alignSelf: 'flex-start' }}>
-                <Chip variant="ink" icon="pencil" label={hasContent(sel) ? 'Edit entry' : 'Write entry'} />
+                <Chip variant="ink" icon="pencil" label={L.t(hasContent(sel) ? 'journal.edit' : 'journal.write')} />
               </Press>
             )}
           </Glass>
@@ -130,34 +132,34 @@ export default function JournalScreen() {
       ) : (
         <>
           <Glass radius={26} padding={18} style={{ gap: 16 }}>
-            <Txt variant="title">Last 7 days</Txt>
+            <Txt variant="title">{L.t('journal.last7')}</Txt>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Stat value={`${week.journaled}/7`} label="Days journaled" />
-              <Stat value={`${week.prayers}/35`} label="Prayers marked" />
+              <Stat value={L.num(`${week.journaled}/7`)} label={L.t('journal.daysJournaled')} />
+              <Stat value={L.num(`${week.prayers}/35`)} label={L.t('journal.prayersMarked')} />
             </View>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Stat value={String(week.fasts)} label="Days fasted" />
-              <Stat value={String(week.deeds)} label="Good deeds" />
+              <Stat value={L.num(week.fasts)} label={L.t('journal.daysFasted')} />
+              <Stat value={L.num(week.deeds)} label={L.t('journal.goodDeeds')} />
             </View>
           </Glass>
 
           <Glass radius={26} padding={18} style={{ gap: 12 }}>
-            <Txt variant="title">How you felt</Txt>
+            <Txt variant="title">{L.t('journal.felt')}</Txt>
             {week.moods.length === 0 ? (
               <Txt variant="body" tone="muted">
-                Add how you feel in your entries to see patterns here.
+                {L.t('journal.feltEmpty')}
               </Txt>
             ) : (
               week.moods.map((m) => (
                 <View key={m.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Txt variant="caption" style={{ width: 80 }}>
-                    {m.label}
+                    {L.t(m.label)}
                   </Txt>
                   <View style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: t.track, overflow: 'hidden' }}>
                     <View style={{ width: `${(m.count / maxMood) * 100}%`, height: '100%', borderRadius: 4, backgroundColor: t.ink }} />
                   </View>
                   <Txt variant="caption" tone="muted" tabular style={{ width: 20, textAlign: 'right' }}>
-                    {m.count}
+                    {L.num(m.count)}
                   </Txt>
                 </View>
               ))
@@ -166,22 +168,22 @@ export default function JournalScreen() {
 
           {week.extras.length > 0 && (
             <Glass radius={26} padding={18} style={{ gap: 10 }}>
-              <Txt variant="title">Extra worship</Txt>
+              <Txt variant="title">{L.t('journal.extraWorship')}</Txt>
               {week.extras.map((x) => (
                 <View key={x.key} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <Icon name="circleCheck" size={16} color={t.text} />
                   <Txt variant="body" style={{ flex: 1 }}>
-                    {x.label}
+                    {L.t(x.label)}
                   </Txt>
                   <Txt variant="caption" tone="muted" tabular>
-                    {x.count}×
+                    {L.num(x.count)}×
                   </Txt>
                 </View>
               ))}
             </Glass>
           )}
           <Txt variant="caption" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 12 }}>
-            Your journal stays private on this device.
+            {L.t('journal.private')}
           </Txt>
         </>
       )}

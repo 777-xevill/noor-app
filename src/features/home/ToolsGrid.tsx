@@ -5,22 +5,24 @@ import { Icon } from '@/components/Icon';
 import { Press } from '@/components/Press';
 import { Txt } from '@/components/Txt';
 import { CORE_TOOLS, type Tool } from '@/features/tools';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 function ToolTile({ tool }: { tool: Tool }) {
   const t = useTheme();
+  const L = useT();
   return (
     <Press
       style={{ flex: 1 }}
       scaleTo={0.94}
       accessibilityRole="button"
-      accessibilityLabel={tool.label}
+      accessibilityLabel={L.t(tool.label)}
       onPress={() => router.push(tool.href)}
     >
       <Glass radius={22} padding={0} style={{ height: 92, alignItems: 'center', justifyContent: 'center', gap: 9 }}>
         <Icon name={tool.icon} size={24} color={t.text} />
         <Txt variant="caption" tone="soft" numberOfLines={1}>
-          {tool.label}
+          {L.t(tool.label)}
         </Txt>
       </Glass>
     </Press>

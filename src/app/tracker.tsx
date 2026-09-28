@@ -10,11 +10,12 @@ import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
 import { Txt } from '@/components/Txt';
-import { type DayParts, dayKey, daysBetween, daysInMonth, longDate } from '@/lib/dates';
+import { type DayParts, dayKey, daysBetween, daysInMonth } from '@/lib/dates';
+import { useT } from '@/i18n';
 import { type FastState, useFasting } from '@/features/fasting/store';
 import { usePrayerLog } from '@/features/prayer/log';
 import { PRAYER_ICON } from '@/features/prayer/PrayerIcon';
-import { prayerLabel, PRAYERS, type PrayerKey } from '@/features/prayer/times';
+import { PRAYERS, type PrayerKey } from '@/features/prayer/times';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { useTheme } from '@/theme/useTheme';
 
@@ -23,6 +24,7 @@ const EMPTY: PrayerKey[] = [];
 
 export default function TrackerScreen() {
   const t = useTheme();
+  const L = useT();
   const { schedule, hijriOffset } = useSchedule(60_000);
   const today = schedule.day;
   const [mode, setMode] = useState<Mode>('prayers');
@@ -60,13 +62,13 @@ export default function TrackerScreen() {
 
   return (
     <Screen gap={16}>
-      <ScreenHeader title="Tracker" subtitle="Prayers and fasts, day by day" />
+      <ScreenHeader title={L.t('tracker.title')} subtitle={L.t('tracker.subtitle')} />
       <Segmented<Mode>
         value={mode}
         onChange={setMode}
         options={[
-          { value: 'prayers', label: 'Prayers' },
-          { value: 'fasting', label: 'Fasting' },
+          { value: 'prayers', label: L.t('tracker.prayers') },
+          { value: 'fasting', label: L.t('tracker.fasting') },
         ]}
       />
 
@@ -76,10 +78,10 @@ export default function TrackerScreen() {
             <ProgressRing size={40} stroke={4} progress={possible ? kept / possible : 0} color={t.ink} track={t.track} />
             <View>
               <Txt variant="title" tabular>
-                {kept} of {possible} prayers
+                {L.t('tracker.kept', { kept, possible })}
               </Txt>
               <Txt variant="caption" tone="muted">
-                Marked this month so far
+                {L.t('tracker.markedMonth')}
               </Txt>
             </View>
           </View>
@@ -87,19 +89,19 @@ export default function TrackerScreen() {
           <>
             <View style={{ flex: 1 }}>
               <Txt variant="h2" tabular>
-                {fasted}
+                {L.num(fasted)}
               </Txt>
               <Txt variant="caption" tone="muted">
-                Days fasted
+                {L.t('tracker.daysFasted')}
               </Txt>
             </View>
             <View style={{ width: 1, backgroundColor: t.line }} />
             <View style={{ flex: 1 }}>
               <Txt variant="h2" tabular>
-                {missed}
+                {L.num(missed)}
               </Txt>
               <Txt variant="caption" tone="muted">
-                To make up (qada)
+                {L.t('tracker.qada')}
               </Txt>
             </View>
           </>
@@ -124,10 +126,10 @@ export default function TrackerScreen() {
       />
 
       <Glass radius={26} padding={16} style={{ gap: 12 }}>
-        <Txt variant="title">{longDate(selected)}</Txt>
+        <Txt variant="title">{L.longDate(selected)}</Txt>
         {isFuture ? (
           <Txt variant="body" tone="muted">
-            You can mark this day once it arrives.
+            {L.t('tracker.future')}
           </Txt>
         ) : mode === 'prayers' ? (
           PRAYERS.map(({ key }) => {
@@ -146,7 +148,7 @@ export default function TrackerScreen() {
               >
                 <Icon name={PRAYER_ICON[key]} size={18} color={t.textSoft} />
                 <Txt variant="bodyStrong" style={{ flex: 1 }}>
-                  {prayerLabel(key, selected)}
+                  {L.prayer(key, selected)}
                 </Txt>
                 <View
                   style={{
@@ -170,9 +172,9 @@ export default function TrackerScreen() {
             value={fasts[selKey] ?? 'none'}
             onChange={(v) => setFast(selKey, v === 'none' ? null : v)}
             options={[
-              { value: 'none', label: 'Not fasting' },
-              { value: 'fasted', label: 'Fasted' },
-              { value: 'missed', label: 'Missed' },
+              { value: 'none', label: L.t('fast.none') },
+              { value: 'fasted', label: L.t('fast.fasted') },
+              { value: 'missed', label: L.t('fast.missed') },
             ]}
           />
         )}

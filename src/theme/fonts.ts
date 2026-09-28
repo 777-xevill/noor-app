@@ -8,6 +8,19 @@ export const fontAssets = {
   'Amiri-Bold': require('@expo-google-fonts/amiri/700Bold/Amiri_700Bold.ttf'),
   // Amiri Quran is drawn for the Uthmani script (small high letters, pause marks, rounded zeros).
   'AmiriQuran-Regular': require('@expo-google-fonts/amiri-quran/400Regular/AmiriQuran_400Regular.ttf'),
+  // Bangla UI (also covers Latin), used in place of Geist when the app language is Bangla.
+  'HindSiliguri-Regular': require('@expo-google-fonts/hind-siliguri/400Regular/HindSiliguri_400Regular.ttf'),
+  'HindSiliguri-Medium': require('@expo-google-fonts/hind-siliguri/500Medium/HindSiliguri_500Medium.ttf'),
+  'HindSiliguri-SemiBold': require('@expo-google-fonts/hind-siliguri/600SemiBold/HindSiliguri_600SemiBold.ttf'),
+  'HindSiliguri-Bold': require('@expo-google-fonts/hind-siliguri/700Bold/HindSiliguri_700Bold.ttf'),
+};
+
+/** Geist family → Bangla equivalent at the same weight. */
+export const BANGLA_FAMILY: Record<string, string> = {
+  'Geist-Regular': 'HindSiliguri-Regular',
+  'Geist-Medium': 'HindSiliguri-Medium',
+  'Geist-SemiBold': 'HindSiliguri-SemiBold',
+  'Geist-Bold': 'HindSiliguri-Bold',
 };
 
 export const fonts = {

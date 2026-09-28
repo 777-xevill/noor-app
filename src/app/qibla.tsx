@@ -16,6 +16,7 @@ import { Txt } from '@/components/Txt';
 import { distanceKm, KAABA } from '@/lib/geo';
 import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const ALIGNED_DEG = 3;
@@ -110,6 +111,7 @@ function Dial({ size, bearing }: { size: number; bearing: number }) {
 
 export default function QiblaScreen() {
   const t = useTheme();
+  const L = useT();
   const { width } = useWindowDimensions();
   const loc = useSettings((s) => s.location);
   const bearing = Qibla(new Coordinates(loc.latitude, loc.longitude));
@@ -138,11 +140,11 @@ export default function QiblaScreen() {
 
   return (
     <Screen gap={18}>
-      <ScreenHeader title="Qibla" subtitle={`${loc.city}${loc.country ? `, ${loc.country}` : ''}`} />
+      <ScreenHeader title={L.t('qibla.title')} subtitle={`${loc.city}${loc.country ? `, ${loc.country}` : ''}`} />
 
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-        <Chip live={!!heading} label={heading ? (heading.kind === 'true' ? 'Compass · true north' : 'Compass · magnetic north') : unavailable ? 'No compass on this device' : 'Starting compass…'} />
-        <Chip icon="navigation" label={`${Math.round(km).toLocaleString('en-US')} km to the Kaaba`} />
+        <Chip live={!!heading} label={L.t(heading ? (heading.kind === 'true' ? 'qibla.compassTrue' : 'qibla.compassMag') : unavailable ? 'qibla.noCompass' : 'qibla.starting')} />
+        <Chip icon="navigation" label={L.t('qibla.km', { km: L.num(Math.round(km).toLocaleString('en-US')) })} />
       </View>
 
       <View style={{ alignItems: 'center', paddingVertical: 8 }}>
@@ -156,26 +158,26 @@ export default function QiblaScreen() {
       <Glass strong radius={26} padding={18} style={{ alignItems: 'center', gap: 6 }}>
         {km < 25 ? (
           <>
-            <Txt variant="h1">You’re in Makkah</Txt>
+            <Txt variant="h1">{L.t('qibla.inMakkah')}</Txt>
             <Txt variant="body" tone="muted" style={{ textAlign: 'center' }}>
-              This close, a compass bearing isn’t precise enough. Face the Kaaba directly.
+              {L.t('qibla.inMakkahBody')}
             </Txt>
           </>
         ) : heading ? (
           <>
-            <Txt variant="h1">{aligned ? 'Facing the Qibla' : `Turn ${offBy! > 0 ? 'right' : 'left'} ${Math.abs(Math.round(offBy!))}°`}</Txt>
+            <Txt variant="h1">{aligned ? L.t('qibla.facing') : L.t(offBy! > 0 ? 'qibla.turnRight' : 'qibla.turnLeft', { deg: Math.abs(Math.round(offBy!)) })}</Txt>
             <Txt variant="body" tone="muted" style={{ textAlign: 'center' }}>
-              {aligned ? 'The Kaaba is straight ahead.' : 'Hold your phone flat and turn until the Kaaba reaches the top.'}
+              {L.t(aligned ? 'qibla.ahead' : 'qibla.hold')}
             </Txt>
           </>
         ) : (
           <>
             <Txt variant="h1" tabular>
-              {bearing.toFixed(1)}°
+              {L.num(bearing.toFixed(1))}°
             </Txt>
             <Txt variant="body" tone="muted" style={{ textAlign: 'center' }}>
-              The Qibla from {loc.city} is {bearing.toFixed(1)}° clockwise from true north.
-              {unavailable ? ' Use a compass, or open the app on a phone, to find this direction.' : ''}
+              {L.t('qibla.bearing', { city: loc.city, deg: L.num(bearing.toFixed(1)) })}
+              {unavailable ? ` ${L.t('qibla.useCompass')}` : ''}
             </Txt>
           </>
         )}
@@ -184,13 +186,13 @@ export default function QiblaScreen() {
       <Glass radius={22} padding={14} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
         <Icon name="info" size={18} color={t.textSoft} />
         <Txt variant="caption" tone="soft" style={{ flex: 1 }}>
-          Keep the phone flat and away from metal, magnets and electronics. If the direction looks wrong, move the phone in a figure-8 to calibrate the compass.
+          {L.t('qibla.tip')}
         </Txt>
       </Glass>
 
       <Press onPress={() => router.push('/settings/location')} style={{ alignSelf: 'center', padding: 8 }} accessibilityRole="button">
         <Txt variant="caption" tone="soft">
-          Not in {loc.city}? Change location
+          {L.t('qibla.notIn', { city: loc.city })}
         </Txt>
       </Press>
     </Screen>

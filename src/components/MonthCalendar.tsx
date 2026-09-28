@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { type DayParts, daysInMonth, MONTHS, sameDay, weekdayMon0 } from '@/lib/dates';
-import { HIJRI_MONTHS, toHijri } from '@/lib/hijri';
+import { type DayParts, daysInMonth, sameDay, weekdayMon0 } from '@/lib/dates';
+import { toHijri } from '@/lib/hijri';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 import { Glass } from './Glass';
 import { IconButton } from './IconButton';
 import { Press } from './Press';
 import { Txt } from './Txt';
-
-const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 type Props = {
   year: number;
@@ -25,12 +24,14 @@ type Props = {
 /** Gregorian month grid with the Hijri months it spans; today outlined, selection inverted. */
 export function MonthCalendar({ year, month, today, selected, hijriOffset, onSelect, onMonthChange, renderMark }: Props) {
   const t = useTheme();
+  const L = useT();
+  const WEEK = [0, 1, 2, 3, 4, 5, 6].map((d) => L.t(`wd.${d}` as 'wd.0'));
   const count = daysInMonth(year, month);
   const first = { y: year, m: month, d: 1 };
   const lead = weekdayMon0(first);
   const h1 = toHijri(first, hijriOffset);
   const h2 = toHijri({ y: year, m: month, d: count }, hijriOffset);
-  const hijriSpan = h1.month === h2.month ? `${HIJRI_MONTHS[h1.month]} ${h1.year}` : `${HIJRI_MONTHS[h1.month]} – ${HIJRI_MONTHS[h2.month]} ${h2.year}`;
+  const hijriSpan = h1.month === h2.month ? `${L.hijriMonth(h1.month)} ${L.num(h1.year)}` : `${L.hijriMonth(h1.month)} – ${L.hijriMonth(h2.month)} ${L.num(h2.year)}`;
 
   const cells: (DayParts | null)[] = [...Array.from({ length: lead }, () => null), ...Array.from({ length: count }, (_, i) => ({ y: year, m: month, d: i + 1 }))];
   while (cells.length % 7) cells.push(null);
@@ -38,16 +39,16 @@ export function MonthCalendar({ year, month, today, selected, hijriOffset, onSel
   return (
     <Glass radius={26} padding={14} style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <IconButton icon="chevronLeft" label="Previous month" size={38} onPress={() => onMonthChange(-1)} />
+        <IconButton icon="chevronLeft" label={L.t('common.prevMonth')} size={38} onPress={() => onMonthChange(-1)} />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Txt variant="title">
-            {MONTHS[month]} {year}
+            {L.month(month)} {L.num(year)}
           </Txt>
           <Txt variant="caption" tone="muted">
-            {hijriSpan} AH
+            {hijriSpan} {L.t('common.ah')}
           </Txt>
         </View>
-        <IconButton icon="chevronRight" label="Next month" size={38} onPress={() => onMonthChange(1)} />
+        <IconButton icon="chevronRight" label={L.t('common.nextMonth')} size={38} onPress={() => onMonthChange(1)} />
       </View>
       <View style={{ flexDirection: 'row' }}>
         {WEEK.map((w, i) => (
@@ -67,7 +68,7 @@ export function MonthCalendar({ year, month, today, selected, hijriOffset, onSel
               scaleTo={0.9}
               onPress={() => onSelect(day)}
               accessibilityRole="button"
-              accessibilityLabel={`${day.d} ${MONTHS[month]}`}
+              accessibilityLabel={L.dayMonth(day)}
               accessibilityState={{ selected: isSelected }}
               style={{ width: `${100 / 7}%`, alignItems: 'center', gap: 4 }}
             >
@@ -84,7 +85,7 @@ export function MonthCalendar({ year, month, today, selected, hijriOffset, onSel
                 }}
               >
                 <Txt variant="bodyStrong" tone={isSelected ? 'onInk' : 'default'} tabular style={{ fontSize: 14 }}>
-                  {day.d}
+                  {L.num(day.d)}
                 </Txt>
               </View>
               <View style={{ height: 18, alignItems: 'center', justifyContent: 'center' }}>{renderMark?.(day)}</View>

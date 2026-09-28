@@ -7,7 +7,8 @@ import { Icon, type IconName } from '@/components/Icon';
 import { Press } from '@/components/Press';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Txt } from '@/components/Txt';
-import { dayKey, formatClock } from '@/lib/dates';
+import { dayKey } from '@/lib/dates';
+import { useT } from '@/i18n';
 import { usePrayerLog } from '@/features/prayer/log';
 import { PRAYERS, type PrayerKey } from '@/features/prayer/times';
 import { useSchedule } from '@/features/prayer/useSchedule';
@@ -63,6 +64,7 @@ function CheckMark({ done, started, inverted }: { done: boolean; started: boolea
 
 export function TodayPrayers() {
   const t = useTheme();
+  const L = useT();
   const { now, loc, schedule } = useSchedule();
   const key = dayKey(schedule.day);
   const done = usePrayerLog((s) => s.days[key] ?? EMPTY);
@@ -72,16 +74,16 @@ export function TodayPrayers() {
     <Glass padding={14} radius={26} style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
         <View>
-          <Txt variant="title">Today’s prayers</Txt>
+          <Txt variant="title">{L.t('home.todaysPrayers')}</Txt>
           <Txt variant="caption" tone="muted">
-            Tap a prayer once you’ve prayed it
+            {L.t('home.tapToMark')}
           </Txt>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Txt variant="bodyStrong" tabular>
-            {done.length}
+            {L.num(done.length)}
             <Txt variant="bodyStrong" tone="muted">
-              /5
+              /{L.num(5)}
             </Txt>
           </Txt>
           <ProgressRing size={26} stroke={3} progress={done.length / 5} color={t.ink} track={t.track} />
@@ -89,13 +91,14 @@ export function TodayPrayers() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 6 }}>
-        {PRAYERS.map(({ key: prayer, label }) => {
+        {PRAYERS.map(({ key: prayer }) => {
+          const label = L.prayer(prayer, schedule.day);
           const started = schedule.times[prayer].getTime() <= now.getTime();
           const isCurrent = schedule.current === prayer;
           const isDone = done.includes(prayer);
           const fg = isCurrent ? t.onInk : t.text;
           const fgMuted = isCurrent ? t.onInk : t.textMuted;
-          const clock = formatClock(schedule.times[prayer], loc.timeZone);
+          const clock = L.clock(schedule.times[prayer], loc.timeZone);
 
           return (
             <Press

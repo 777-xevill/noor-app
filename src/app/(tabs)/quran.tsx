@@ -16,6 +16,7 @@ import { dayKey } from '@/lib/dates';
 import { ContinueReading } from '@/features/home/ContinueReading';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { useQuranProgress } from '@/features/quran/progress';
+import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 type View_ = 'surah' | 'juz' | 'saved';
@@ -28,6 +29,7 @@ const normalise = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 function NumberBadge({ n }: { n: number }) {
   const t = useTheme();
+  const L = useT();
   return (
     <View
       style={{
@@ -43,7 +45,7 @@ function NumberBadge({ n }: { n: number }) {
     >
       <View style={{ transform: [{ rotate: '-45deg' }] }}>
         <Txt variant="caption" tabular>
-          {n}
+          {L.num(n)}
         </Txt>
       </View>
     </View>
@@ -52,14 +54,15 @@ function NumberBadge({ n }: { n: number }) {
 
 function SurahRow({ s }: { s: SurahMeta }) {
   const t = useTheme();
+  const L = useT();
   return (
-    <Press onPress={() => openReader(s.n)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={`Surah ${s.name}`}>
+    <Press onPress={() => openReader(s.n)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={L.t('quran.surahA11y', { name: s.name })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: t.line }}>
         <NumberBadge n={s.n} />
         <View style={{ flex: 1 }}>
           <Txt variant="title">{s.name}</Txt>
           <Txt variant="caption" tone="muted">
-            {s.meaning} · {s.ayahs} ayahs · {s.type === 'Meccan' ? 'Makki' : 'Madani'}
+            {s.meaning} · {L.t('quran.ayahs', { n: s.ayahs })} · {L.t(s.type === 'Meccan' ? 'quran.makki' : 'quran.madani')}
           </Txt>
         </View>
         <Txt variant="arabic" style={{ fontSize: 21, lineHeight: 34 }}>
@@ -72,6 +75,7 @@ function SurahRow({ s }: { s: SurahMeta }) {
 
 function TodayReading() {
   const t = useTheme();
+  const L = useT();
   const { schedule } = useSchedule(60_000);
   const seconds = useQuranProgress((s) => s.readingSeconds[dayKey(schedule.day)] ?? 0);
   const goal = useQuranProgress((s) => s.goalMinutes);
@@ -81,10 +85,10 @@ function TodayReading() {
       <ProgressRing size={46} stroke={4} progress={minutes / goal} color={t.ink} track={t.track} />
       <View style={{ flex: 1 }}>
         <Txt variant="title" tabular>
-          {minutes} of {goal} min today
+          {L.t('quran.minToday', { m: minutes, g: goal })}
         </Txt>
         <Txt variant="caption" tone="muted">
-          {minutes >= goal ? 'Daily reading goal reached. Alhamdulillah.' : 'Time spent in the reader counts toward your goal.'}
+          {L.t(minutes >= goal ? 'quran.goalReached' : 'quran.goalHint')}
         </Txt>
       </View>
     </Glass>
@@ -93,6 +97,7 @@ function TodayReading() {
 
 export default function QuranScreen() {
   const t = useTheme();
+  const L = useT();
   const [view, setView] = useState<View_>('surah');
   const [query, setQuery] = useState('');
   const bookmarks = useQuranProgress((s) => s.bookmarks);
@@ -107,7 +112,7 @@ export default function QuranScreen() {
     <Screen tabs gap={18}>
       <Reveal index={0}>
         <Txt variant="h1" style={{ marginTop: 8 }}>
-          Quran
+          {L.t('quran.title')}
         </Txt>
       </Reveal>
       <Reveal index={1}>
@@ -121,9 +126,9 @@ export default function QuranScreen() {
           value={view}
           onChange={setView}
           options={[
-            { value: 'surah', label: 'Surah' },
-            { value: 'juz', label: 'Juz' },
-            { value: 'saved', label: `Saved${bookmarks.length ? ` · ${bookmarks.length}` : ''}` },
+            { value: 'surah', label: L.t('quran.surah') },
+            { value: 'juz', label: L.t('quran.juz') },
+            { value: 'saved', label: `${L.t('quran.saved')}${bookmarks.length ? ` · ${L.num(bookmarks.length)}` : ''}` },
           ]}
         />
       </Reveal>
@@ -131,14 +136,14 @@ export default function QuranScreen() {
       {view === 'surah' && (
         <Reveal index={4}>
           <View style={{ gap: 8 }}>
-            <Field icon="search" placeholder="Search by name, meaning or number" value={query} onChangeText={setQuery} autoCorrect={false} />
+            <Field icon="search" placeholder={L.t('quran.searchPh')} value={query} onChangeText={setQuery} autoCorrect={false} />
             <Glass radius={24} padding={0} style={{ paddingHorizontal: 14 }}>
               {surahs.map((s) => (
                 <SurahRow key={s.n} s={s} />
               ))}
               {surahs.length === 0 && (
                 <Txt variant="body" tone="muted" style={{ paddingVertical: 24, textAlign: 'center' }}>
-                  No surah matches “{query}”.
+                  {L.t('quran.noMatch', { q: query })}
                 </Txt>
               )}
             </Glass>
@@ -151,13 +156,13 @@ export default function QuranScreen() {
           {JUZ_STARTS.map((j) => {
             const s = SURAHS[j.surah - 1];
             return (
-              <Press key={j.juz} onPress={() => openReader(j.surah, j.ayah)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={`Juz ${j.juz}`}>
+              <Press key={j.juz} onPress={() => openReader(j.surah, j.ayah)} scaleTo={0.985} accessibilityRole="button" accessibilityLabel={L.t('quran.juzN', { n: j.juz })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: t.line }}>
                   <NumberBadge n={j.juz} />
                   <View style={{ flex: 1 }}>
-                    <Txt variant="title">Juz {j.juz}</Txt>
+                    <Txt variant="title">{L.t('quran.juzN', { n: j.juz })}</Txt>
                     <Txt variant="caption" tone="muted">
-                      Starts at {s.name} {j.surah}:{j.ayah}
+                      {L.t('quran.startsAt', { name: s.name, ref: L.num(`${j.surah}:${j.ayah}`) })}
                     </Txt>
                   </View>
                   <Icon name="chevronRight" size={17} color={t.textMuted} />
@@ -173,9 +178,9 @@ export default function QuranScreen() {
           {bookmarks.length === 0 ? (
             <View style={{ alignItems: 'center', gap: 8, paddingVertical: 12 }}>
               <Icon name="bookmark" size={26} color={t.textMuted} />
-              <Txt variant="title">No saved verses yet</Txt>
+              <Txt variant="title">{L.t('quran.noSaved')}</Txt>
               <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
-                Tap the bookmark on any verse to keep it here.
+                {L.t('quran.noSavedHint')}
               </Txt>
             </View>
           ) : (
@@ -189,7 +194,7 @@ export default function QuranScreen() {
                     <View style={{ flex: 1 }}>
                       <Txt variant="title">{s.name}</Txt>
                       <Txt variant="caption" tone="muted">
-                        Ayah {an} · {s.meaning}
+                        {L.t('quran.ayahN', { n: an })} · {s.meaning}
                       </Txt>
                     </View>
                     <Icon name="chevronRight" size={17} color={t.textMuted} />

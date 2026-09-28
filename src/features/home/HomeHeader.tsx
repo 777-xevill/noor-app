@@ -4,14 +4,15 @@ import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Txt } from '@/components/Txt';
-import { monthName, weekdayName } from '@/lib/dates';
-import { formatHijri, toHijri } from '@/lib/hijri';
+import { toHijri } from '@/lib/hijri';
+import { useT } from '@/i18n';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { useSettings } from '@/features/settings/store';
 import { useTheme } from '@/theme/useTheme';
 
 export function HomeHeader() {
   const t = useTheme();
+  const L = useT();
   const name = useSettings((s) => s.displayName);
   const { schedule, hijriOffset } = useSchedule(60_000);
   const { day } = schedule;
@@ -40,27 +41,27 @@ export function HomeHeader() {
           </View>
           <View style={{ flexShrink: 1 }}>
             <Txt variant="caption" tone="muted">
-              Assalamu alaikum
+              {L.t('home.salam')}
             </Txt>
             <Txt variant="h2" numberOfLines={1}>
-              {name || 'Welcome'}
+              {name || L.t('home.welcome')}
             </Txt>
           </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <ThemeToggle />
-          <IconButton icon="bell" label="Notifications" badge />
+          <IconButton icon="bell" label={L.t('home.notifications')} badge />
         </View>
       </View>
 
       <View style={{ gap: 10 }}>
         <Txt variant="h1">
-          {weekdayName(day)},{' '}
+          {L.weekday(day)},{' '}
           <Txt variant="h1" tone="muted">
-            {day.d} {monthName(day)}
+            {L.dayMonth(day)}
           </Txt>
         </Txt>
-        <Chip icon="moonStar" label={`${formatHijri(toHijri(day, hijriOffset))} AH`} />
+        <Chip icon="moonStar" label={`${L.hijri(toHijri(day, hijriOffset))} ${L.t('common.ah')}`} />
       </View>
     </View>
   );

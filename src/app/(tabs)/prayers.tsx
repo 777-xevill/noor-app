@@ -11,12 +11,13 @@ import { Press } from '@/components/Press';
 import { Reveal } from '@/components/Reveal';
 import { Screen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
-import { addDays, dayKey, daysBetween, formatClock, formatCountdown, monthName, sameDay, weekdayName } from '@/lib/dates';
-import { formatHijri, toHijri } from '@/lib/hijri';
-import { METHOD_LABEL } from '@/features/prayer/location';
+import { addDays, dayKey, daysBetween, sameDay } from '@/lib/dates';
+import { toHijri } from '@/lib/hijri';
+import { useT } from '@/i18n';
+import type { Key } from '@/i18n/en';
 import { usePrayerLog } from '@/features/prayer/log';
 import { PRAYER_ICON } from '@/features/prayer/PrayerIcon';
-import { prayerLabel, PRAYERS, prayerTimesFor, type PrayerKey } from '@/features/prayer/times';
+import { PRAYERS, prayerTimesFor, type PrayerKey } from '@/features/prayer/times';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { type AlertKind, useSettings } from '@/features/settings/store';
 import { useTheme } from '@/theme/useTheme';
@@ -24,10 +25,11 @@ import { useTheme } from '@/theme/useTheme';
 const EMPTY: PrayerKey[] = [];
 const NEXT_ALERT: Record<AlertKind, AlertKind> = { sound: 'silent', silent: 'off', off: 'sound' };
 const ALERT_ICON: Record<AlertKind, IconName> = { sound: 'bellRing', silent: 'bell', off: 'bellOff' };
-const ALERT_LABEL: Record<AlertKind, string> = { sound: 'Alert with sound', silent: 'Silent alert', off: 'No alert' };
+const ALERT_LABEL: Record<AlertKind, Key> = { sound: 'alert.sound', silent: 'alert.silent', off: 'alert.off' };
 
 export default function PrayersScreen() {
   const t = useTheme();
+  const L = useT();
   const { now, loc, prefs, hijriOffset, schedule } = useSchedule();
   const [offset, setOffset] = useState(0); // days from today
   const day = addDays(schedule.day, offset);
@@ -42,42 +44,42 @@ export default function PrayersScreen() {
   const future = daysBetween(schedule.day, day) > 0;
 
   const rows: { key: PrayerKey | 'sunrise'; label: string }[] = [
-    { key: 'fajr', label: 'Fajr' },
-    { key: 'sunrise', label: 'Sunrise' },
-    ...PRAYERS.slice(1).map((p) => ({ key: p.key, label: prayerLabel(p.key, day) })),
+    { key: 'fajr', label: L.prayer('fajr') },
+    { key: 'sunrise', label: L.prayer('sunrise') },
+    ...PRAYERS.slice(1).map((p) => ({ key: p.key, label: L.prayer(p.key, day) })),
   ];
 
   return (
     <Screen tabs gap={18}>
       <Reveal index={0}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-          <Txt variant="h1">Prayers</Txt>
-          <IconButton icon="settings" label="Prayer settings" onPress={() => router.push('/settings/prayer')} />
+          <Txt variant="h1">{L.t('prayers.title')}</Txt>
+          <IconButton icon="settings" label={L.t('prayers.settings')} onPress={() => router.push('/settings/prayer')} />
         </View>
       </Reveal>
 
       <Reveal index={1}>
         <Glass radius={24} padding={10} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <IconButton icon="chevronLeft" label="Previous day" size={40} onPress={() => setOffset((o) => o - 1)} />
-          <Press style={{ flex: 1, alignItems: 'center' }} onPress={() => setOffset(0)} accessibilityRole="button" accessibilityLabel="Go to today">
+          <IconButton icon="chevronLeft" label={L.t('prayers.prevDay')} size={40} onPress={() => setOffset((o) => o - 1)} />
+          <Press style={{ flex: 1, alignItems: 'center' }} onPress={() => setOffset(0)} accessibilityRole="button" accessibilityLabel={L.t('prayers.goToday')}>
             <Txt variant="title">
-              {isToday ? 'Today' : weekdayName(day)}, {day.d} {monthName(day)}
+              {isToday ? L.t('common.today') : L.weekday(day)}, {L.dayMonth(day)}
             </Txt>
             <Txt variant="caption" tone="muted">
-              {formatHijri(toHijri(day, hijriOffset))} AH
+              {L.hijri(toHijri(day, hijriOffset))} {L.t('common.ah')}
             </Txt>
           </Press>
-          <IconButton icon="chevronRight" label="Next day" size={40} onPress={() => setOffset((o) => o + 1)} />
+          <IconButton icon="chevronRight" label={L.t('prayers.nextDay')} size={40} onPress={() => setOffset((o) => o + 1)} />
         </Glass>
       </Reveal>
 
       <Reveal index={2}>
         <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-          <Press onPress={() => router.push('/settings/location')} accessibilityRole="button" accessibilityLabel="Change location">
+          <Press onPress={() => router.push('/settings/location')} accessibilityRole="button" accessibilityLabel={L.t('prayers.changeLocation')}>
             <Chip icon="mapPin" label={`${loc.city}, ${loc.country}`} />
           </Press>
-          <Press onPress={() => router.push('/settings/prayer')} accessibilityRole="button" accessibilityLabel="Change calculation method">
-            <Chip icon="sliders" label={`${METHOD_LABEL[prefs.method]} · ${prefs.madhab} Asr`} />
+          <Press onPress={() => router.push('/settings/prayer')} accessibilityRole="button" accessibilityLabel={L.t('prayers.changeMethod')}>
+            <Chip icon="sliders" label={`${L.t(`method.${prefs.method}`)} · ${L.t(`madhab.${prefs.madhab}`)} ${L.prayer('asr')}`} />
           </Press>
         </View>
       </Reveal>
@@ -90,15 +92,17 @@ export default function PrayersScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Txt variant="eyebrow" tone="muted">
-                {schedule.next.tomorrow ? 'Next · tomorrow' : 'Next prayer'}
+                {L.t(schedule.next.tomorrow ? 'home.nextTomorrow' : 'home.nextPrayer')}
               </Txt>
               <Txt variant="h2">
-                {prayerLabel(schedule.next.key, schedule.next.tomorrow ? addDays(schedule.day, 1) : schedule.day)} at{' '}
-                {formatClock(schedule.next.at, loc.timeZone).hm} {formatClock(schedule.next.at, loc.timeZone).period}
+                {L.t('prayers.at', {
+                  prayer: L.prayer(schedule.next.key, schedule.next.tomorrow ? addDays(schedule.day, 1) : schedule.day),
+                  time: L.clockFull(schedule.next.at, loc.timeZone),
+                })}
               </Txt>
             </View>
             <Txt variant="title" tabular>
-              {formatCountdown(schedule.next.at.getTime() - now.getTime())}
+              {L.countdown(schedule.next.at.getTime() - now.getTime())}
             </Txt>
           </Glass>
         </Reveal>
@@ -107,7 +111,7 @@ export default function PrayersScreen() {
       <Reveal index={4}>
         <Glass radius={26} padding={8}>
           {rows.map((row, i) => {
-            const c = formatClock(times[row.key], loc.timeZone);
+            const c = L.clock(times[row.key], loc.timeZone);
             const isPrayer = row.key !== 'sunrise';
             const pk = row.key as PrayerKey;
             const isNext = isToday && !schedule.next.tomorrow && schedule.next.key === row.key;
@@ -137,7 +141,7 @@ export default function PrayersScreen() {
                     hitSlop={8}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: isDone, disabled: !started }}
-                    accessibilityLabel={`Mark ${row.label} as prayed`}
+                    accessibilityLabel={L.t('prayers.markAs', { prayer: row.label })}
                     onPress={() => {
                       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       toggle(key, pk);
@@ -174,7 +178,7 @@ export default function PrayersScreen() {
                     hitSlop={8}
                     scaleTo={0.82}
                     accessibilityRole="button"
-                    accessibilityLabel={`${row.label}: ${ALERT_LABEL[alert]}. Tap to change.`}
+                    accessibilityLabel={L.t('alert.state', { prayer: row.label, state: L.t(ALERT_LABEL[alert]) })}
                     onPress={() => setSettings({ alerts: { ...alerts, [pk]: NEXT_ALERT[alert] } })}
                     style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: isNext ? `${t.onInk}1F` : t.pill }}
                   >
@@ -193,19 +197,19 @@ export default function PrayersScreen() {
         <Glass radius={22} padding={14} style={{ flexDirection: 'row', gap: 12 }}>
           <View style={{ flex: 1, gap: 2 }}>
             <Txt variant="micro" tone="muted">
-              Middle of the night
+              {L.t('prayers.midnight')}
             </Txt>
             <Txt variant="title" tabular>
-              {formatClock(times.midnight, loc.timeZone).hm} {formatClock(times.midnight, loc.timeZone).period}
+              {L.clockFull(times.midnight, loc.timeZone)}
             </Txt>
           </View>
           <View style={{ width: 1, backgroundColor: t.line }} />
           <View style={{ flex: 1, gap: 2 }}>
             <Txt variant="micro" tone="muted">
-              Last third begins (Tahajjud)
+              {L.t('prayers.lastThird')}
             </Txt>
             <Txt variant="title" tabular>
-              {formatClock(times.lastThird, loc.timeZone).hm} {formatClock(times.lastThird, loc.timeZone).period}
+              {L.clockFull(times.lastThird, loc.timeZone)}
             </Txt>
           </View>
         </Glass>
@@ -213,16 +217,16 @@ export default function PrayersScreen() {
 
       <Reveal index={6}>
         <ListGroup>
-          <ListRow icon="calendarRange" title="Prayer tracker" subtitle="Month view of prayers and fasts" onPress={() => router.push('/tracker')} />
-          <ListRow icon="table" title="Monthly timetable" subtitle={`All times for ${monthName(day)}`} onPress={() => router.push('/timetable')} />
-          <ListRow icon="compass" title="Qibla direction" onPress={() => router.push('/qibla')} />
-          <ListRow icon="settings" title="Prayer settings" subtitle="Location, method, alerts, adjustments" onPress={() => router.push('/settings/prayer')} last />
+          <ListRow icon="calendarRange" title={L.t('prayers.tracker')} subtitle={L.t('prayers.trackerSub')} onPress={() => router.push('/tracker')} />
+          <ListRow icon="table" title={L.t('prayers.timetable')} subtitle={L.t('prayers.timetableSub', { month: L.month(day.m) })} onPress={() => router.push('/timetable')} />
+          <ListRow icon="compass" title={L.t('prayers.qibla')} onPress={() => router.push('/qibla')} />
+          <ListRow icon="settings" title={L.t('prayers.settings')} subtitle={L.t('prayers.settingsSub')} onPress={() => router.push('/settings/prayer')} last />
         </ListGroup>
       </Reveal>
 
       {!isToday && !sameDay(day, schedule.day) && (
         <Press onPress={() => setOffset(0)} style={{ alignSelf: 'center' }} accessibilityRole="button">
-          <Chip variant="ink" label="Back to today" />
+          <Chip variant="ink" label={L.t('prayers.backToday')} />
         </Press>
       )}
     </Screen>

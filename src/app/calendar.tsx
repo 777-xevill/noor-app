@@ -6,22 +6,24 @@ import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionHeader } from '@/components/SectionHeader';
 import { Txt } from '@/components/Txt';
-import { addDays, type DayParts, daysBetween, MONTHS, sameDay, shortDate, weekdayMon0, weekdayName } from '@/lib/dates';
-import { HIJRI_MONTHS, toHijri } from '@/lib/hijri';
+import { addDays, type DayParts, daysBetween, sameDay, weekdayMon0 } from '@/lib/dates';
+import { toHijri } from '@/lib/hijri';
+import { useT } from '@/i18n';
+import type { Key } from '@/i18n/en';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { useTheme } from '@/theme/useTheme';
 
 // Hijri months are 0-based here (0 = Muharram … 11 = Dhu al-Hijjah).
-const EVENTS: { m: number; d: number; name: string; note: string }[] = [
-  { m: 0, d: 1, name: 'Islamic New Year', note: '1 Muharram' },
-  { m: 0, d: 10, name: 'Day of Ashura', note: 'Fasting this day is Sunnah; many also fast the 9th.' },
-  { m: 6, d: 27, name: 'Isra and Mi’raj', note: 'The commonly observed date. Historians differ on the exact date.' },
-  { m: 7, d: 15, name: 'Mid-Sha’ban', note: 'Observed in many countries, including as Shab-e-Barat in South Asia.' },
-  { m: 8, d: 1, name: 'Ramadan begins', note: 'Subject to the sighting of the new moon.' },
-  { m: 8, d: 21, name: 'Last ten days of Ramadan', note: 'Seek Laylat al-Qadr in the odd nights. Each night begins at Maghrib the evening before.' },
-  { m: 9, d: 1, name: 'Eid al-Fitr', note: 'Subject to the sighting of the new moon.' },
-  { m: 11, d: 9, name: 'Day of Arafah', note: 'Fasting is Sunnah for those not performing Hajj.' },
-  { m: 11, d: 10, name: 'Eid al-Adha', note: '10 Dhu al-Hijjah' },
+const EVENTS: { m: number; d: number; id: string }[] = [
+  { m: 0, d: 1, id: 'newYear' },
+  { m: 0, d: 10, id: 'ashura' },
+  { m: 6, d: 27, id: 'isra' },
+  { m: 7, d: 15, id: 'shaban' },
+  { m: 8, d: 1, id: 'ramadan' },
+  { m: 8, d: 21, id: 'lastTen' },
+  { m: 9, d: 1, id: 'fitr' },
+  { m: 11, d: 9, id: 'arafah' },
+  { m: 11, d: 10, id: 'adha' },
 ];
 
 type HijriMonth = { month: number; year: number; days: { g: DayParts; h: number }[] };
@@ -43,21 +45,22 @@ function hijriMonthOf(anchor: DayParts, offset: number): HijriMonth {
 
 export default function CalendarScreen() {
   const t = useTheme();
+  const L = useT();
   const { schedule, hijriOffset } = useSchedule(60_000);
   const today = schedule.day;
   const [anchor, setAnchor] = useState<DayParts>(today);
   const month = useMemo(() => hijriMonthOf(anchor, hijriOffset), [anchor, hijriOffset]);
 
   const upcoming = useMemo(() => {
-    const found: { g: DayParts; name: string; note: string; hijri: string }[] = [];
+    const found: { g: DayParts; id: string; hijri: string }[] = [];
     for (let i = 0; i < 380 && found.length < 9; i++) {
       const g = addDays(today, i);
       const h = toHijri(g, hijriOffset);
       const ev = EVENTS.find((e) => e.m === h.month && e.d === h.day);
-      if (ev) found.push({ g, name: ev.name, note: ev.note, hijri: `${h.day} ${HIJRI_MONTHS[h.month]} ${h.year}` });
+      if (ev) found.push({ g, id: ev.id, hijri: L.hijri(h) });
     }
     return found;
-  }, [today, hijriOffset]);
+  }, [today, hijriOffset, L]);
 
   const first = month.days[0].g;
   const lead = weekdayMon0(first);
@@ -67,23 +70,23 @@ export default function CalendarScreen() {
 
   return (
     <Screen gap={16}>
-      <ScreenHeader title="Islamic calendar" subtitle={`${HIJRI_MONTHS[toHijri(today, hijriOffset).month]} ${toHijri(today, hijriOffset).year} AH`} />
+      <ScreenHeader title={L.t('calendar.title')} subtitle={`${L.hijriMonth(toHijri(today, hijriOffset).month)} ${L.num(toHijri(today, hijriOffset).year)} ${L.t('common.ah')}`} />
 
       <Glass radius={26} padding={14} style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <IconButton icon="chevronLeft" label="Previous Hijri month" size={38} onPress={() => setAnchor(addDays(first, -1))} />
+          <IconButton icon="chevronLeft" label={L.t('calendar.prev')} size={38} onPress={() => setAnchor(addDays(first, -1))} />
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Txt variant="title">
-              {HIJRI_MONTHS[month.month]} {month.year}
+              {L.hijriMonth(month.month)} {L.num(month.year)}
             </Txt>
             <Txt variant="caption" tone="muted">
-              {shortDate(first)} – {shortDate(last)} {last.y} · {month.days.length} days
+              {L.shortDate(first)} – {L.shortDate(last)} {L.num(last.y)} · {L.t('calendar.days', { n: month.days.length })}
             </Txt>
           </View>
-          <IconButton icon="chevronRight" label="Next Hijri month" size={38} onPress={() => setAnchor(addDays(last, 1))} />
+          <IconButton icon="chevronRight" label={L.t('calendar.next')} size={38} onPress={() => setAnchor(addDays(last, 1))} />
         </View>
         <View style={{ flexDirection: 'row' }}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((d) => L.t(`wd.${d}` as Key)).map((w, i) => (
             <Txt key={i} variant="micro" tone="muted" style={{ width: `${100 / 7}%`, textAlign: 'center' }}>
               {w}
             </Txt>
@@ -107,10 +110,10 @@ export default function CalendarScreen() {
                   }}
                 >
                   <Txt variant="bodyStrong" tone={isToday ? 'onInk' : 'default'} tabular style={{ fontSize: 15, lineHeight: 18 }}>
-                    {c.h}
+                    {L.num(c.h)}
                   </Txt>
                   <Txt variant="micro" tone={isToday ? 'onInk' : 'muted'} tabular style={{ fontSize: 9.5, lineHeight: 11 }}>
-                    {c.g.d === 1 || i === lead ? `${c.g.d} ${MONTHS[c.g.m].slice(0, 3)}` : c.g.d}
+                    {c.g.d === 1 || i === lead ? L.shortDate(c.g) : L.num(c.g.d)}
                   </Txt>
                 </View>
               </View>
@@ -119,30 +122,30 @@ export default function CalendarScreen() {
         </View>
       </Glass>
 
-      <SectionHeader title="Coming up" />
+      <SectionHeader title={L.t('calendar.comingUp')} />
       <Glass radius={26} padding={4}>
         {upcoming.map((e, i) => {
           const days = daysBetween(today, e.g);
           return (
-            <View key={e.name + i} style={{ flexDirection: 'row', gap: 12, padding: 14, borderBottomWidth: i < upcoming.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
+            <View key={e.id + i} style={{ flexDirection: 'row', gap: 12, padding: 14, borderBottomWidth: i < upcoming.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
               <View style={{ flex: 1, gap: 3 }}>
-                <Txt variant="title">{e.name}</Txt>
+                <Txt variant="title">{L.t(`event.${e.id}` as Key)}</Txt>
                 <Txt variant="caption" tone="muted">
-                  {e.hijri} · {weekdayName(e.g)}, {shortDate(e.g)} {e.g.y}
+                  {e.hijri} · {L.weekday(e.g)}, {L.shortDate(e.g)} {L.num(e.g.y)}
                 </Txt>
                 <Txt variant="caption" tone="soft">
-                  {e.note}
+                  {L.t(`event.${e.id}.note` as Key)}
                 </Txt>
               </View>
               <Txt variant="caption" tone="soft" tabular>
-                {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `in ${days} days`}
+                {days === 0 ? L.t('common.today') : days === 1 ? L.t('common.tomorrow') : L.t('common.inDays', { n: days })}
               </Txt>
             </View>
           );
         })}
       </Glass>
       <Txt variant="caption" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 8 }}>
-        Dates are calculated with the Umm al-Qura calendar and your adjustment in Prayer settings. The start of each month depends on local moon sighting.
+        {L.t('calendar.disclaimer')}
       </Txt>
     </Screen>
   );

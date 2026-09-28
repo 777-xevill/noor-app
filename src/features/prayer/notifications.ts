@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
-import { addDays, formatClockFull, wallDay } from '@/lib/dates';
+import { addDays, wallDay } from '@/lib/dates';
+import { makeI18n } from '@/i18n';
 import { useSettings } from '@/features/settings/store';
-import { prayerLabel, PRAYERS, prayerTimesFor } from './times';
+import { PRAYERS, prayerTimesFor } from './times';
 
 // Prayer alerts are scheduled as local notifications for the coming days and re-planned whenever
 // settings change or the app returns to the foreground. iOS keeps at most 64 pending notifications.
@@ -47,6 +48,8 @@ export async function reschedulePrayerAlerts() {
   const s = useSettings.getState();
   const { location: loc, alerts, reminderBefore, hijriOffset } = s;
   const prefs = { method: s.method, madhab: s.madhab, highLatitude: s.highLatitude, adjustments: s.adjustments };
+  // Alerts are written in the app's language at the time they're scheduled.
+  const L = makeI18n(s.language);
 
   await N.cancelAllScheduledNotificationsAsync();
   const now = Date.now();
@@ -60,14 +63,18 @@ export async function reschedulePrayerAlerts() {
       const kind = alerts[key];
       if (kind === 'off') continue;
       const at = times[key];
-      const label = prayerLabel(key, day);
+      const label = L.prayer(key, day);
       const channelId = kind === 'sound' ? 'prayer-sound' : 'prayer-silent';
 
       if (reminderBefore > 0) {
         const early = new Date(at.getTime() - reminderBefore * 60_000);
         if (early.getTime() > now && pending < MAX_PENDING) {
           await N.scheduleNotificationAsync({
-            content: { title: `${label} in ${reminderBefore} minutes`, body: `${label} begins at ${formatClockFull(at, loc.timeZone)} in ${loc.city}.`, sound: kind === 'sound' },
+            content: {
+              title: L.t('notif.earlyTitle', { prayer: label, n: reminderBefore }),
+              body: L.t('notif.earlyBody', { prayer: label, time: L.clockFull(at, loc.timeZone), city: loc.city }),
+              sound: kind === 'sound',
+            },
             trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: early, channelId },
           });
           pending++;
@@ -75,7 +82,11 @@ export async function reschedulePrayerAlerts() {
       }
       if (at.getTime() > now && pending < MAX_PENDING) {
         await N.scheduleNotificationAsync({
-          content: { title: `${label} · ${formatClockFull(at, loc.timeZone)}`, body: `It’s time for ${label} in ${loc.city}.`, sound: kind === 'sound' },
+          content: {
+            title: L.t('notif.title', { prayer: label, time: L.clockFull(at, loc.timeZone) }),
+            body: L.t('notif.body', { prayer: label, city: loc.city }),
+            sound: kind === 'sound',
+          },
           trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId },
         });
         pending++;

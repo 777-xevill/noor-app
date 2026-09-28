@@ -9,55 +9,51 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
 import { Stepper } from '@/components/Stepper';
 import { Txt } from '@/components/Txt';
-import { formatHijri, toHijri } from '@/lib/hijri';
+import { toHijri } from '@/lib/hijri';
+import { useT } from '@/i18n';
 import { METHODS, suggestedMadhab, suggestedMethod } from '@/features/prayer/location';
 import { alertsSupported, requestAlertPermission } from '@/features/prayer/notifications';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { type AdjustableTime, type AlertKind, type AlertPrayer, type HighLatitude, useSettings } from '@/features/settings/store';
 import { useTheme } from '@/theme/useTheme';
 
-const ADJUSTABLE: { key: AdjustableTime; label: string }[] = [
-  { key: 'fajr', label: 'Fajr' },
-  { key: 'sunrise', label: 'Sunrise' },
-  { key: 'dhuhr', label: 'Dhuhr' },
-  { key: 'asr', label: 'Asr' },
-  { key: 'maghrib', label: 'Maghrib' },
-  { key: 'isha', label: 'Isha' },
-];
-const ALERT_PRAYERS: { key: AlertPrayer; label: string }[] = [
-  { key: 'fajr', label: 'Fajr' },
-  { key: 'dhuhr', label: 'Dhuhr' },
-  { key: 'asr', label: 'Asr' },
-  { key: 'maghrib', label: 'Maghrib' },
-  { key: 'isha', label: 'Isha' },
-];
-const signed = (v: number) => (v === 0 ? '0 min' : `${v > 0 ? '+' : '−'}${Math.abs(v)} min`);
+const ADJUSTABLE: AdjustableTime[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+const ALERT_PRAYERS: AlertPrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 export default function PrayerSettingsScreen() {
   const t = useTheme();
+  const L = useT();
   const s = useSettings();
   const { schedule } = useSchedule(60_000);
   const [permission, setPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const localMethod = suggestedMethod(s.location.cc);
   const localMadhab = suggestedMadhab(s.location.cc);
+  const signed = (v: number, unit: 'minutes' | 'days') =>
+    v === 0 ? L.t(unit === 'minutes' ? 'common.minutes' : 'common.days', { n: 0 }) : `${v > 0 ? '+' : '−'}${L.t(unit === 'minutes' ? 'common.minutes' : 'common.days', { n: Math.abs(v) })}`;
 
   return (
     <Screen gap={20}>
-      <ScreenHeader title="Prayer settings" subtitle={`${s.location.city}${s.location.country ? `, ${s.location.country}` : ''}`} />
+      <ScreenHeader title={L.t('ps.title')} subtitle={`${s.location.city}${s.location.country ? `, ${s.location.country}` : ''}`} />
 
-      <ListGroup title="Location">
-        <ListRow icon="mapPin" title={s.location.city} subtitle={s.location.source === 'gps' ? 'From your device' : 'Chosen from list'} onPress={() => router.push('/settings/location')} last />
+      <ListGroup title={L.t('ps.location')}>
+        <ListRow
+          icon="mapPin"
+          title={s.location.city}
+          subtitle={L.t(s.location.source === 'gps' ? 'ps.fromDevice' : 'ps.fromList')}
+          onPress={() => router.push('/settings/location')}
+          last
+        />
       </ListGroup>
 
       <ListGroup
-        title="Calculation method"
-        footer={`Usually used in ${s.location.country || 'your area'}: ${METHODS.find((m) => m.key === localMethod)?.label}. Follow your local mosque if it differs.`}
+        title={L.t('ps.method')}
+        footer={L.t('ps.methodFooter', { country: s.location.country || L.t('ps.yourArea'), method: L.t(`method.${localMethod}`) })}
       >
         {METHODS.map((m, i) => (
           <ListRow
             key={m.key}
-            title={m.label}
-            subtitle={m.detail}
+            title={L.t(`method.${m.key}`)}
+            subtitle={L.t(`method.${m.key}.d`)}
             onPress={() => s.set({ method: m.key })}
             right={s.method === m.key ? <Icon name="check" size={18} color={t.text} strokeWidth={2.4} /> : <View style={{ width: 18 }} />}
             last={i === METHODS.length - 1}
@@ -67,53 +63,53 @@ export default function PrayerSettingsScreen() {
 
       <View style={{ gap: 8 }}>
         <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 6 }}>
-          Asr time
+          {L.t('ps.asr')}
         </Txt>
         <Segmented
           value={s.madhab}
           onChange={(madhab) => s.set({ madhab })}
           options={[
-            { value: 'Shafi', label: 'Standard' },
-            { value: 'Hanafi', label: 'Hanafi' },
+            { value: 'Shafi', label: L.t('madhab.Shafi') },
+            { value: 'Hanafi', label: L.t('madhab.Hanafi') },
           ]}
         />
         <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
-          Standard (Shafi’i, Maliki, Hanbali): Asr begins when an object’s shadow equals its height, plus its shadow at noon. Hanafi: when the shadow is twice its height, so Asr is later. Common here: {localMadhab === 'Hanafi' ? 'Hanafi' : 'Standard'}.
+          {L.t('ps.asrNote', { common: L.t(`madhab.${localMadhab}`) })}
         </Txt>
       </View>
 
       <View style={{ gap: 8 }}>
         <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 6 }}>
-          High-latitude rule
+          {L.t('ps.highLat')}
         </Txt>
         <Segmented<HighLatitude>
           value={s.highLatitude}
           onChange={(highLatitude) => s.set({ highLatitude })}
           options={[
-            { value: 'auto', label: 'Auto' },
-            { value: 'middleOfTheNight', label: 'Middle' },
-            { value: 'seventhOfTheNight', label: '1/7 night' },
-            { value: 'twilightAngle', label: 'Angle' },
+            { value: 'auto', label: L.t('ps.hl.auto') },
+            { value: 'middleOfTheNight', label: L.t('ps.hl.middle') },
+            { value: 'seventhOfTheNight', label: L.t('ps.hl.seventh') },
+            { value: 'twilightAngle', label: L.t('ps.hl.angle') },
           ]}
         />
         <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
-          Only matters far from the equator (e.g. UK summer), when twilight never fully ends. Auto uses the recommended rule for your latitude.
+          {L.t('ps.highLatNote')}
         </Txt>
       </View>
 
-      <ListGroup title="Adjust to your mosque" footer="Add or remove minutes from a calculated time, e.g. to match your local mosque’s timetable.">
-        {ADJUSTABLE.map((a, i) => (
+      <ListGroup title={L.t('ps.adjust')} footer={L.t('ps.adjustFooter')}>
+        {ADJUSTABLE.map((k, i) => (
           <ListRow
-            key={a.key}
-            title={a.label}
+            key={k}
+            title={L.prayer(k)}
             right={
               <Stepper
-                label={`${a.label} adjustment`}
-                value={s.adjustments[a.key]}
+                label={L.t('ps.adjustment', { prayer: L.prayer(k) })}
+                value={s.adjustments[k]}
                 min={-30}
                 max={30}
-                format={signed}
-                onChange={(v) => s.set({ adjustments: { ...s.adjustments, [a.key]: v } })}
+                format={(v) => signed(v, 'minutes')}
+                onChange={(v) => s.set({ adjustments: { ...s.adjustments, [k]: v } })}
               />
             }
             last={i === ADJUSTABLE.length - 1}
@@ -121,25 +117,24 @@ export default function PrayerSettingsScreen() {
         ))}
       </ListGroup>
 
-      <ListGroup
-        title="Hijri date"
-        footer="Hijri dates follow the Umm al-Qura calendar. Months often start a day later in Bangladesh and South Asia; adjust to match your local moon-sighting announcement."
-      >
+      <ListGroup title={L.t('ps.hijri')} footer={L.t('ps.hijriFooter')}>
         <ListRow
-          title={`${formatHijri(toHijri(schedule.day, s.hijriOffset))} AH`}
-          subtitle="Today"
-          right={<Stepper label="Hijri adjustment" value={s.hijriOffset} min={-2} max={2} format={(v) => (v === 0 ? '0 days' : `${v > 0 ? '+' : '−'}${Math.abs(v)} day${Math.abs(v) > 1 ? 's' : ''}`)} onChange={(v) => s.set({ hijriOffset: v })} />}
+          title={`${L.hijri(toHijri(schedule.day, s.hijriOffset))} ${L.t('common.ah')}`}
+          subtitle={L.t('common.today')}
+          right={
+            <Stepper label={L.t('ps.hijriAdjust')} value={s.hijriOffset} min={-2} max={2} format={(v) => signed(v, 'days')} onChange={(v) => s.set({ hijriOffset: v })} />
+          }
           last
         />
       </ListGroup>
 
       <View style={{ gap: 8 }}>
         <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 6 }}>
-          Alerts
+          {L.t('ps.alerts')}
         </Txt>
         {!alertsSupported ? (
           <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
-            Prayer alerts work in the phone app. Your choices here are saved and used there.
+            {L.t('ps.alertsWeb')}
           </Txt>
         ) : permission !== 'granted' ? (
           <Press
@@ -148,21 +143,21 @@ export default function PrayerSettingsScreen() {
             style={{ paddingHorizontal: 6 }}
           >
             <Txt variant="caption" tone="soft">
-              {permission === 'denied' ? 'Notifications are turned off for Noor. Turn them on in your phone’s Settings to get prayer alerts.' : 'Tap to allow notifications for prayer alerts.'}
+              {L.t(permission === 'denied' ? 'ps.alertsDenied' : 'ps.alertsAsk')}
             </Txt>
           </Press>
         ) : null}
         <ListGroup>
-          {ALERT_PRAYERS.map((p, i) => (
-            <View key={p.key} style={{ gap: 8, paddingVertical: 12, borderBottomWidth: i < ALERT_PRAYERS.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
-              <Txt variant="bodyStrong">{p.label}</Txt>
+          {ALERT_PRAYERS.map((k, i) => (
+            <View key={k} style={{ gap: 8, paddingVertical: 12, borderBottomWidth: i < ALERT_PRAYERS.length - 1 ? 1 : 0, borderBottomColor: t.line }}>
+              <Txt variant="bodyStrong">{L.prayer(k)}</Txt>
               <Segmented<AlertKind>
-                value={s.alerts[p.key]}
-                onChange={(v) => s.set({ alerts: { ...s.alerts, [p.key]: v } })}
+                value={s.alerts[k]}
+                onChange={(v) => s.set({ alerts: { ...s.alerts, [k]: v } })}
                 options={[
-                  { value: 'sound', label: 'Sound' },
-                  { value: 'silent', label: 'Silent' },
-                  { value: 'off', label: 'Off' },
+                  { value: 'sound', label: L.t('ps.sound') },
+                  { value: 'silent', label: L.t('ps.silent') },
+                  { value: 'off', label: L.t('ps.off') },
                 ]}
               />
             </View>
@@ -170,15 +165,15 @@ export default function PrayerSettingsScreen() {
         </ListGroup>
         <ListGroup>
           <View style={{ gap: 8, paddingVertical: 12 }}>
-            <Txt variant="bodyStrong">Reminder before each prayer</Txt>
+            <Txt variant="bodyStrong">{L.t('ps.reminder')}</Txt>
             <Segmented
               value={String(s.reminderBefore)}
               onChange={(v) => s.set({ reminderBefore: Number(v) })}
               options={[
-                { value: '0', label: 'None' },
-                { value: '10', label: '10 min' },
-                { value: '15', label: '15 min' },
-                { value: '30', label: '30 min' },
+                { value: '0', label: L.t('ps.none') },
+                { value: '10', label: L.t('common.minutes', { n: 10 }) },
+                { value: '15', label: L.t('common.minutes', { n: 15 }) },
+                { value: '30', label: L.t('common.minutes', { n: 30 }) },
               ]}
             />
           </View>
@@ -191,7 +186,7 @@ export default function PrayerSettingsScreen() {
         style={{ alignSelf: 'center', padding: 8 }}
       >
         <Txt variant="caption" tone="soft">
-          Reset to the usual settings for {s.location.country || 'this place'}
+          {L.t('ps.reset', { country: s.location.country || L.t('ps.thisPlace') })}
         </Txt>
       </Press>
     </Screen>
