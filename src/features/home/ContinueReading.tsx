@@ -14,7 +14,12 @@ export function ContinueReading() {
 
   return (
     <Press
-      onPress={() => router.navigate('/quran')}
+      onPress={() =>
+        router.push({
+          pathname: '/quran/[surah]',
+          params: lastRead ? { surah: String(lastRead.surahNumber), ayah: String(lastRead.ayah) } : { surah: '1' },
+        })
+      }
       scaleTo={0.98}
       accessibilityRole="button"
       accessibilityLabel="Continue reading the Quran"

@@ -13,7 +13,7 @@ import { useTheme } from '@/theme/useTheme';
 export function HomeHeader() {
   const t = useTheme();
   const name = useSettings((s) => s.displayName);
-  const { schedule } = useSchedule(60_000);
+  const { schedule, hijriOffset } = useSchedule(60_000);
   const { day } = schedule;
 
   return (
@@ -60,7 +60,7 @@ export function HomeHeader() {
             {day.d} {monthName(day)}
           </Txt>
         </Txt>
-        <Chip icon="moonStar" label={`${formatHijri(toHijri(day))} AH`} />
+        <Chip icon="moonStar" label={`${formatHijri(toHijri(day, hijriOffset))} AH`} />
       </View>
     </View>
   );

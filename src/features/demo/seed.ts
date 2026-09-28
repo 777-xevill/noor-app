@@ -23,7 +23,7 @@ export function seedDemoData() {
   if (Object.keys(log.days).length === 0) {
     const loc = settings.location;
     const now = new Date();
-    const today = wallDay(now, loc.utcOffsetMinutes);
+    const today = wallDay(now, loc.timeZone);
     const days: Record<string, PrayerKey[]> = {};
 
     PAST_WEEK_PATTERN.forEach((count, i) => {
@@ -32,7 +32,7 @@ export function seedDemoData() {
     });
 
     // Today: everything before the prayer currently running has been prayed.
-    const { current } = scheduleAt(now, loc);
+    const { current } = scheduleAt(now, loc, settings, settings.hijriOffset);
     const upTo = current ? PRAYERS.findIndex((p) => p.key === current) : -1;
     days[dayKey(today)] = PRAYERS.slice(0, Math.max(0, upTo)).map((p) => p.key);
 

@@ -5,9 +5,9 @@ import { Chip } from '@/components/Chip';
 import { IconButton } from '@/components/IconButton';
 import { useScreenScroll } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
-import { formatClock, formatCountdown } from '@/lib/dates';
+import { addDays, formatClock, formatCountdown } from '@/lib/dates';
 import { METHOD_LABEL } from '@/features/prayer/location';
-import { PRAYER_LABEL } from '@/features/prayer/times';
+import { prayerLabel } from '@/features/prayer/times';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { fonts } from '@/theme/fonts';
 import { onPhoto } from '@/theme/tokens';
@@ -19,10 +19,10 @@ const BLEED = 56;
 
 export function NextPrayerHero() {
   const t = useTheme();
-  const { now, loc, schedule } = useSchedule();
+  const { now, loc, prefs, schedule } = useSchedule();
   const { key, at, tomorrow } = schedule.next;
-  const clock = formatClock(at, loc.utcOffsetMinutes);
-  const sunrise = formatClock(schedule.times.sunrise, loc.utcOffsetMinutes);
+  const clock = formatClock(at, loc.timeZone);
+  const sunrise = formatClock(schedule.times.sunrise, loc.timeZone);
   const scrollY = useScreenScroll();
 
   // Parallax: the photo travels slower than the card while scrolling, and swells on pull-down.
@@ -50,7 +50,7 @@ export function NextPrayerHero() {
         <View style={{ gap: 14 }}>
           <View>
             <Txt style={styles.name} color={onPhoto.text}>
-              {PRAYER_LABEL[key]}
+              {prayerLabel(key, schedule.next.tomorrow ? addDays(schedule.day, 1) : schedule.day)}
             </Txt>
             <View style={styles.timeRow}>
               <Txt variant="display" color={onPhoto.text} tabular>
@@ -71,7 +71,7 @@ export function NextPrayerHero() {
           </View>
 
           <Txt variant="micro" color={onPhoto.textSoft}>
-            {METHOD_LABEL[loc.method]} method · {loc.madhab} Asr
+            {METHOD_LABEL[prefs.method]} method · {prefs.madhab} Asr
           </Txt>
         </View>
       </View>

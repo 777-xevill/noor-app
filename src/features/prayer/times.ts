@@ -1,5 +1,7 @@
-import { CalculationMethod, Coordinates, Madhab, PrayerTimes } from 'adhan';
+import { CalculationMethod, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, SunnahTimes } from 'adhan';
 import { addDays, type DayParts, wallDay } from '@/lib/dates';
+import { toHijri } from '@/lib/hijri';
+import type { PrayerPrefs } from '@/features/settings/store';
 import type { PrayerLocation } from './location';
 
 export type PrayerKey = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
@@ -17,14 +19,43 @@ export const PRAYER_LABEL: Record<PrayerKey, string> = Object.fromEntries(PRAYER
   string
 >;
 
-export type DayTimes = Record<PrayerKey | 'sunrise', Date>;
+/** Label for Dhuhr on Fridays. */
+export const prayerLabel = (key: PrayerKey, day: DayParts) =>
+  key === 'dhuhr' && new Date(Date.UTC(day.y, day.m, day.d)).getUTCDay() === 5 ? 'Jumu’ah' : PRAYER_LABEL[key];
 
-export function prayerTimesFor(loc: PrayerLocation, day: DayParts): DayTimes {
-  const params = CalculationMethod[loc.method]();
-  params.madhab = loc.madhab === 'Hanafi' ? Madhab.Hanafi : Madhab.Shafi;
-  // adhan reads the calendar day from the Date's local fields; the result instants are absolute.
-  const pt = new PrayerTimes(new Coordinates(loc.latitude, loc.longitude), new Date(day.y, day.m, day.d), params);
-  return { fajr: pt.fajr, sunrise: pt.sunrise, dhuhr: pt.dhuhr, asr: pt.asr, maghrib: pt.maghrib, isha: pt.isha };
+export type DayTimes = Record<PrayerKey | 'sunrise', Date> & { lastThird: Date; midnight: Date };
+
+const RAMADAN = 8; // 0-based Hijri month index
+
+export function prayerTimesFor(loc: PrayerLocation, day: DayParts, prefs: PrayerPrefs, hijriOffset = 0): DayTimes {
+  const coords = new Coordinates(loc.latitude, loc.longitude);
+  const params = CalculationMethod[prefs.method]();
+  params.madhab = prefs.madhab === 'Hanafi' ? Madhab.Hanafi : Madhab.Shafi;
+  params.highLatitudeRule =
+    prefs.highLatitude === 'middleOfTheNight'
+      ? HighLatitudeRule.MiddleOfTheNight
+      : prefs.highLatitude === 'seventhOfTheNight'
+        ? HighLatitudeRule.SeventhOfTheNight
+        : prefs.highLatitude === 'twilightAngle'
+          ? HighLatitudeRule.TwilightAngle
+          : HighLatitudeRule.recommended(coords);
+  // Umm al-Qura: Isha is 120 minutes after Maghrib during Ramadan (90 otherwise).
+  if (prefs.method === 'UmmAlQura' && toHijri(day, hijriOffset).month === RAMADAN) params.ishaInterval = 120;
+  params.adjustments = { ...params.adjustments, ...prefs.adjustments };
+
+  // adhan reads the calendar day from the Date's local fields; the resulting instants are absolute.
+  const pt = new PrayerTimes(coords, new Date(day.y, day.m, day.d), params);
+  const sunnah = new SunnahTimes(pt);
+  return {
+    fajr: pt.fajr,
+    sunrise: pt.sunrise,
+    dhuhr: pt.dhuhr,
+    asr: pt.asr,
+    maghrib: pt.maghrib,
+    isha: pt.isha,
+    midnight: sunnah.middleOfTheNight,
+    lastThird: sunnah.lastThirdOfTheNight,
+  };
 }
 
 export type Schedule = {
@@ -35,9 +66,9 @@ export type Schedule = {
   next: { key: PrayerKey; at: Date; tomorrow: boolean };
 };
 
-export function scheduleAt(now: Date, loc: PrayerLocation): Schedule {
-  const day = wallDay(now, loc.utcOffsetMinutes);
-  const times = prayerTimesFor(loc, day);
+export function scheduleAt(now: Date, loc: PrayerLocation, prefs: PrayerPrefs, hijriOffset = 0): Schedule {
+  const day = wallDay(now, loc.timeZone);
+  const times = prayerTimesFor(loc, day, prefs, hijriOffset);
   const t = now.getTime();
 
   let current: PrayerKey | null = null;
@@ -48,7 +79,7 @@ export function scheduleAt(now: Date, loc: PrayerLocation): Schedule {
   const upcoming = PRAYERS.find(({ key }) => times[key].getTime() > t);
   const next = upcoming
     ? { key: upcoming.key, at: times[upcoming.key], tomorrow: false }
-    : { key: 'fajr' as const, at: prayerTimesFor(loc, addDays(day, 1)).fajr, tomorrow: true };
+    : { key: 'fajr' as const, at: prayerTimesFor(loc, addDays(day, 1), prefs, hijriOffset).fajr, tomorrow: true };
 
   return { day, times, current, next };
 }

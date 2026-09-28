@@ -95,7 +95,7 @@ export function TodayPrayers() {
           const isDone = done.includes(prayer);
           const fg = isCurrent ? t.onInk : t.text;
           const fgMuted = isCurrent ? t.onInk : t.textMuted;
-          const clock = formatClock(schedule.times[prayer], loc.utcOffsetMinutes);
+          const clock = formatClock(schedule.times[prayer], loc.timeZone);
 
           return (
             <Press

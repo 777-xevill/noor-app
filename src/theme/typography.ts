@@ -13,7 +13,8 @@ export const type = {
   caption: { fontFamily: fonts.medium, fontSize: 12.5, lineHeight: 17 },
   micro: { fontFamily: fonts.medium, fontSize: 11, lineHeight: 14 },
   eyebrow: { fontFamily: fonts.semibold, fontSize: 11, lineHeight: 14, letterSpacing: 1.2, textTransform: 'uppercase' },
-  arabic: { fontFamily: fonts.arabic, fontSize: 30, lineHeight: 58, writingDirection: 'rtl', textAlign: 'right' },
+  arabic: { fontFamily: fonts.arabic, fontSize: 26, lineHeight: 50, writingDirection: 'rtl', textAlign: 'right' },
+  quran: { fontFamily: fonts.quran, fontSize: 30, lineHeight: 64, writingDirection: 'rtl', textAlign: 'right' },
 } satisfies Record<string, TextStyle>;
 
 export type TypeVariant = keyof typeof type;
