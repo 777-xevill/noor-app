@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import { addDays, wallDay } from '@/lib/dates';
-import { makeI18n } from '@/i18n';
+import { makeI18n } from '@/i18n/core';
 import { toHijri } from '@/lib/hijri';
 import { useRamadan } from '@/features/ramadan/store';
 import { RAMADAN } from '@/features/ramadan/calendar';

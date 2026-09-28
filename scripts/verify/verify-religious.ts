@@ -14,6 +14,7 @@ import type { CalcMethod, PrayerLocation } from '../../src/features/prayer/locat
 import { prayerTimesFor } from '../../src/features/prayer/times';
 import { computeStats } from '../../src/features/rewards/milestones';
 import { streakOf } from '../../src/features/rewards/streaks';
+import { widgetSnapshot, widgetTimeline } from '../../src/features/widget/snapshot';
 
 const ALADHAN_METHOD: Partial<Record<CalcMethod, number>> = {
   Karachi: 1,
@@ -194,10 +195,30 @@ async function main() {
     ['best streak across history', streakOf([...run, ...older], today).best === 5],
     ['broken streak resets', streakOf(older, today).current === 0],
   ];
+  // Widget: moves to the next prayer exactly at each prayer time, and to tomorrow's Fajr after Isha.
+  const dhaka = CITIES.find((c) => c.name === 'Dhaka')!;
+  const wLoc: PrayerLocation = { city: 'Dhaka', country: 'Bangladesh', cc: 'BD', latitude: dhaka.lat, longitude: dhaka.lng, timeZone: dhaka.tz, source: 'city' };
+  const wPrefs = { method: 'Karachi' as const, madhab: 'Hanafi' as const, highLatitude: 'auto' as const, adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } };
+  const wInput = { loc: wLoc, prefs: wPrefs, hijriOffset: 0, lang: 'en' as const };
+  const wDay: DayParts = { y: 2026, m: 8, d: 29 };
+  const wTimes = prayerTimesFor(wLoc, wDay, wPrefs);
+  const at = (d: Date, deltaMs: number) => new Date(d.getTime() + deltaMs);
+  const before = widgetSnapshot(at(wTimes.asr, -60_000), wInput);
+  const onTime = widgetSnapshot(wTimes.asr, wInput);
+  const afterIsha = widgetSnapshot(at(wTimes.isha, 60_000), wInput);
+  const timeline = widgetTimeline(at(wTimes.fajr, -3_600_000), wInput);
+  const rewardChecksWidget: [string, boolean][] = [
+    ['widget: Asr is next a minute before Asr', before.nextName === 'Asr' && before.nextAt === wTimes.asr.getTime()],
+    ['widget: Maghrib is next from the moment Asr begins', onTime.nextName === 'Maghrib'],
+    ["widget: after Isha, tomorrow's Fajr and tomorrow's times", afterIsha.nextName === 'Fajr' && afterIsha.nextAt > wTimes.isha.getTime() && afterIsha.dateLine.startsWith('30 Sep ')],
+    ['widget: timeline has an entry at every prayer time', ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].every((k) => timeline.some((e) => e.date.getTime() === wTimes[k as 'fajr'].getTime()))],
+    ['widget: timeline changes date at local midnight', timeline.some((e) => e.props.dateLine.startsWith('30 Sep ') && e.date.getTime() < wTimes.isha.getTime() + 6 * 3_600_000 && e.props.nextName === 'Fajr')],
+  ];
+  rewardChecks.push(...rewardChecksWidget);
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} milestones: ${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${label.startsWith('widget') ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

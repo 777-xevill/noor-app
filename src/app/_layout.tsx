@@ -16,23 +16,17 @@ import { usePrayerLog } from '@/features/prayer/log';
 import { reschedulePrayerAlerts } from '@/features/prayer/notifications';
 import { useQuranProgress } from '@/features/quran/progress';
 import { useSettings } from '@/features/settings/store';
+import { syncWidgets } from '@/features/widget/sync';
+import { whenHydrated } from '@/lib/storage';
 import { fontAssets } from '@/theme/fonts';
 import { useTheme } from '@/theme/useTheme';
-
-type Persisted = { persist: { hasHydrated: () => boolean; onFinishHydration: (fn: () => void) => () => void } };
-
-const hydrated = (store: Persisted) =>
-  new Promise<void>((resolve) => {
-    if (store.persist.hasHydrated()) resolve();
-    else store.persist.onFinishHydration(() => resolve());
-  });
 
 function useStoresReady() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     // Every persisted store must be loaded before the first screen renders, so nothing flashes empty
     // and no early write can overwrite saved data.
-    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards].map(hydrated)).then(() => {
+    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards].map(whenHydrated)).then(() => {
       seedDemoData();
       setReady(true);
     });
@@ -40,14 +34,20 @@ function useStoresReady() {
   return ready;
 }
 
-/** Keep scheduled prayer alerts in step with settings, and roll the window forward on every return to the app. */
+/**
+ * Keep scheduled prayer alerts and the home-screen widget in step with settings, and roll both
+ * forward on every return to the app.
+ */
 function usePrayerAlerts(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const plan = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => reschedulePrayerAlerts().catch(() => {}), 400);
+      timer = setTimeout(() => {
+        reschedulePrayerAlerts().catch(() => {});
+        syncWidgets().catch(() => {});
+      }, 400);
     };
     plan();
     const unsubscribe = useSettings.subscribe((s, prev) => {

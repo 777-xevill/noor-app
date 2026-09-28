@@ -673,6 +673,19 @@ export const en = {
   'ms.journalFirst.d': 'Write your first journal entry',
   'ms.journalWeek': 'A week of reflection',
   'ms.journalWeek.d': 'Journal 7 days in a row',
+  'widget.next': 'Next prayer',
+  'widget.title': 'Home-screen widget',
+  'widget.subtitle': 'Prayer times at a glance',
+  'widget.small': 'Small',
+  'widget.medium': 'Medium',
+  'widget.howTo': 'How to add it',
+  'widget.iphone': 'iPhone',
+  'widget.iphoneHow': 'Touch and hold an empty part of the Home Screen, tap Edit, then Add Widget, and choose Noor. It also fits the Lock Screen.',
+  'widget.android': 'Android',
+  'widget.androidHow': 'Touch and hold an empty part of the home screen, tap Widgets, and choose Noor.',
+  'widget.note': 'On iPhone the widget moves on to each prayer by itself, with a live countdown. On Android it refreshes when you open Noor and about every 30 minutes.',
+  'widget.webNote': 'Widgets are part of the phone app. This is how yours will look.',
+  'settings.widget': 'Home-screen widget',
 } as const;
 
 export type Key = keyof typeof en;

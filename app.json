@@ -7,7 +7,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.xevill.noor"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,7 +17,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.xevill.noor"
     },
     "web": {
       "bundler": "metro",
@@ -35,6 +37,54 @@
         {
           "sounds": [
             "./assets/sounds/adhan.wav"
+          ]
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.xevill.noor.widgets",
+          "groupIdentifier": "group.com.xevill.noor",
+          "widgets": [
+            {
+              "name": "PrayerTimes",
+              "displayName": "Prayer times",
+              "description": "The next prayer, a live countdown and today’s times.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "accessoryRectangular",
+                  "accessoryInline"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./node_modules/@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf",
+            "./node_modules/@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf",
+            "./node_modules/@expo-google-fonts/hind-siliguri/400Regular/HindSiliguri_400Regular.ttf",
+            "./node_modules/@expo-google-fonts/hind-siliguri/500Medium/HindSiliguri_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/hind-siliguri/600SemiBold/HindSiliguri_600SemiBold.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "PrayerTimes",
+              "label": "Prayer times",
+              "description": "The next prayer and today’s times",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "updatePeriodMillis": 1800000
+            }
           ]
         }
       ]

@@ -24,3 +24,12 @@ const safe: StateStorage = {
 };
 
 export const persistStorage = createJSONStorage(() => safe);
+
+type Persisted = { persist: { hasHydrated: () => boolean; onFinishHydration: (fn: () => void) => () => void } };
+
+/** Resolves once a persisted store has loaded its saved state. */
+export const whenHydrated = (store: Persisted) =>
+  new Promise<void>((resolve) => {
+    if (store.persist.hasHydrated()) resolve();
+    else store.persist.onFinishHydration(() => resolve());
+  });

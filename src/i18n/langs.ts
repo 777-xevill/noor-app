@@ -1,5 +1,3 @@
-import { getLocales } from 'expo-localization';
-
 export type Lang = 'en' | 'bn';
 
 export const LANGS: { code: Lang; name: string; english: string; rtl: boolean }[] = [
@@ -19,11 +17,3 @@ export function localDigits(text: string | number, lang: Lang): string {
 }
 
 /** The device language if we support it, otherwise English. */
-export function deviceLang(): Lang {
-  try {
-    const code = getLocales()[0]?.languageCode;
-    return code === 'bn' ? 'bn' : 'en';
-  } catch {
-    return 'en';
-  }
-}

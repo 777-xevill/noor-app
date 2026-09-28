@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { persistStorage } from '@/lib/storage';
-import { deviceLang, type Lang } from '@/i18n/langs';
+import { deviceLang } from '@/i18n/device';
+import type { Lang } from '@/i18n/langs';
 import {
   type AsrMadhab,
   type CalcMethod,

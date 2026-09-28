@@ -68,7 +68,8 @@ export default function SettingsScreen() {
 
       <ListGroup title={L.t('settings.prayer')}>
         <ListRow icon="mapPin" title={L.t('settings.location')} value={s.location.city} onPress={() => router.push('/settings/location')} />
-        <ListRow icon="sliders" title={L.t('settings.calcAlerts')} value={L.t(`method.${s.method}`)} onPress={() => router.push('/settings/prayer')} last />
+        <ListRow icon="sliders" title={L.t('settings.calcAlerts')} value={L.t(`method.${s.method}`)} onPress={() => router.push('/settings/prayer')} />
+        <ListRow icon="grid" title={L.t('settings.widget')} onPress={() => router.push('/settings/widget')} last />
       </ListGroup>
 
       <ListGroup title={L.t('settings.quran')}>
