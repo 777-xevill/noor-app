@@ -23,9 +23,10 @@ import { type AlertKind, useSettings } from '@/features/settings/store';
 import { useTheme } from '@/theme/useTheme';
 
 const EMPTY: PrayerKey[] = [];
-const NEXT_ALERT: Record<AlertKind, AlertKind> = { sound: 'silent', silent: 'off', off: 'sound' };
-const ALERT_ICON: Record<AlertKind, IconName> = { sound: 'bellRing', silent: 'bell', off: 'bellOff' };
-const ALERT_LABEL: Record<AlertKind, Key> = { sound: 'alert.sound', silent: 'alert.silent', off: 'alert.off' };
+// Tapping the bell steps through: adhan → sound → silent → off.
+const NEXT_ALERT: Record<AlertKind, AlertKind> = { adhan: 'sound', sound: 'silent', silent: 'off', off: 'adhan' };
+const ALERT_ICON: Record<AlertKind, IconName> = { adhan: 'volume', sound: 'bellRing', silent: 'bell', off: 'bellOff' };
+const ALERT_LABEL: Record<AlertKind, Key> = { adhan: 'alert.adhan', sound: 'alert.sound', silent: 'alert.silent', off: 'alert.off' };
 
 export default function PrayersScreen() {
   const t = useTheme();

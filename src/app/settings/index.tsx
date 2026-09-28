@@ -10,6 +10,7 @@ import { Stepper } from '@/components/Stepper';
 import { Txt } from '@/components/Txt';
 import { LANGS, type Lang, useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
+import { ADHAN_CREDIT } from '@/features/prayer/adhan';
 import { useQuranProgress } from '@/features/quran/progress';
 import { type ThemeMode, useSettings } from '@/features/settings/store';
 
@@ -23,6 +24,7 @@ const SOURCES: [Key, string][] = [
   ['src.names', 'api.aladhan.com'],
   ['src.times', 'adhan (Batoul Apps), checked against api.aladhan.com'],
   ['src.cities', '© OpenStreetMap contributors'],
+  ['src.adhan', ADHAN_CREDIT],
 ];
 
 export default function SettingsScreen() {

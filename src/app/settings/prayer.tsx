@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
 import { Icon } from '@/components/Icon';
 import { ListGroup, ListRow } from '@/components/ListRow';
 import { Press } from '@/components/Press';
+import { ProgressRing } from '@/components/ProgressRing';
 import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
@@ -11,6 +13,7 @@ import { Stepper } from '@/components/Stepper';
 import { Txt } from '@/components/Txt';
 import { toHijri } from '@/lib/hijri';
 import { useT } from '@/i18n';
+import { ADHAN_ASSET, ADHAN_SECONDS } from '@/features/prayer/adhan';
 import { METHODS, suggestedMadhab, suggestedMethod } from '@/features/prayer/location';
 import { alertsSupported, requestAlertPermission } from '@/features/prayer/notifications';
 import { useSchedule } from '@/features/prayer/useSchedule';
@@ -19,6 +22,54 @@ import { useTheme } from '@/theme/useTheme';
 
 const ADJUSTABLE: AdjustableTime[] = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
 const ALERT_PRAYERS: AlertPrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+/** Plays the alert clip exactly as it will sound, with a ring that fills as it plays. */
+function AdhanPreview() {
+  const t = useTheme();
+  const L = useT();
+  const player = useAudioPlayer(ADHAN_ASSET);
+  const status = useAudioPlayerStatus(player);
+  const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
+
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+  }, []);
+
+  // Back to the start when it ends, so the next tap plays it again.
+  useEffect(() => {
+    if (status.didJustFinish) player.seekTo(0).catch(() => {});
+  }, [status.didJustFinish, player]);
+
+  const toggle = () => {
+    if (status.playing) {
+      player.pause();
+      player.seekTo(0).catch(() => {});
+    } else player.play();
+  };
+  const label = L.t(status.playing ? 'ps.adhanStop' : 'ps.adhanPlay');
+
+  return (
+    <ListGroup footer={L.t('ps.adhanFooter')}>
+      <ListRow
+        icon="volume"
+        title={L.t('ps.adhanTitle')}
+        subtitle={L.t('ps.adhanSub', { n: L.num(ADHAN_SECONDS) })}
+        onPress={toggle}
+        right={
+          <View accessibilityLabel={label} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ position: 'absolute' }}>
+              <ProgressRing size={40} stroke={2.5} progress={status.playing ? progress : 0} color={t.text} track={t.line} />
+            </View>
+            <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: t.ink, alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name={status.playing ? 'pause' : 'play'} size={14} color={t.onInk} strokeWidth={2.4} />
+            </View>
+          </View>
+        }
+        last
+      />
+    </ListGroup>
+  );
+}
 
 export default function PrayerSettingsScreen() {
   const t = useTheme();
@@ -155,6 +206,7 @@ export default function PrayerSettingsScreen() {
                 value={s.alerts[k]}
                 onChange={(v) => s.set({ alerts: { ...s.alerts, [k]: v } })}
                 options={[
+                  { value: 'adhan', label: L.t('ps.adhan') },
                   { value: 'sound', label: L.t('ps.sound') },
                   { value: 'silent', label: L.t('ps.silent') },
                   { value: 'off', label: L.t('ps.off') },
@@ -163,6 +215,7 @@ export default function PrayerSettingsScreen() {
             </View>
           ))}
         </ListGroup>
+        <AdhanPreview />
         <ListGroup>
           <View style={{ gap: 8, paddingVertical: 12 }}>
             <Txt variant="bodyStrong">{L.t('ps.reminder')}</Txt>

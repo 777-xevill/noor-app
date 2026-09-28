@@ -29,7 +29,15 @@
       "expo-asset",
       "expo-audio",
       "expo-localization",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/adhan.wav"
+          ]
+        }
+      ]
     ],
     "scheme": "noor",
     "experiments": {

@@ -4,7 +4,8 @@ import { makeI18n } from '@/i18n';
 import { toHijri } from '@/lib/hijri';
 import { useRamadan } from '@/features/ramadan/store';
 import { RAMADAN } from '@/features/ramadan/calendar';
-import { useSettings } from '@/features/settings/store';
+import { type AlertKind, useSettings } from '@/features/settings/store';
+import { ADHAN_SOUND } from './adhan';
 import { PRAYERS, prayerTimesFor } from './times';
 
 // Prayer alerts are scheduled as local notifications for the coming days and re-planned whenever
@@ -27,10 +28,21 @@ async function configure(N: NotificationsModule) {
   if (Platform.OS === 'android') {
     await N.setNotificationChannelAsync('prayer-sound', { name: 'Prayer times (sound)', importance: N.AndroidImportance.HIGH, sound: 'default' });
     await N.setNotificationChannelAsync('prayer-silent', { name: 'Prayer times (silent)', importance: N.AndroidImportance.DEFAULT, sound: null });
+    // A channel's sound is fixed once created, so a different recording needs a new channel id.
+    await N.setNotificationChannelAsync('prayer-adhan', { name: 'Prayer times (adhan)', importance: N.AndroidImportance.HIGH, sound: ADHAN_SOUND });
   }
 }
 
 export const alertsSupported = Platform.OS !== 'web';
+
+// The adhan plays only at the prayer time itself; reminders before it use the normal sound.
+const atTime = (kind: AlertKind) =>
+  kind === 'adhan'
+    ? { channelId: 'prayer-adhan', sound: ADHAN_SOUND }
+    : kind === 'sound'
+      ? { channelId: 'prayer-sound', sound: true }
+      : { channelId: 'prayer-silent', sound: false };
+const before = (kind: AlertKind) => atTime(kind === 'adhan' ? 'sound' : kind);
 
 export async function requestAlertPermission(): Promise<boolean> {
   const N = load();
@@ -82,9 +94,11 @@ export async function reschedulePrayerAlerts() {
       }
     }
     if (isRamadan && ramadan.iftarAlert && times.maghrib.getTime() > now && pending < MAX_PENDING) {
+      // Iftar is the Maghrib adhan, so it carries the adhan when Maghrib is set to one.
+      const alert = atTime(alerts.maghrib === 'adhan' ? 'adhan' : 'sound');
       await N.scheduleNotificationAsync({
-        content: { title: L.t('notif.iftarTitle', { time: L.clockFull(times.maghrib, loc.timeZone) }), body: L.t('notif.iftarBody', { city: loc.city }), sound: true },
-        trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: times.maghrib, channelId: 'prayer-sound' },
+        content: { title: L.t('notif.iftarTitle', { time: L.clockFull(times.maghrib, loc.timeZone) }), body: L.t('notif.iftarBody', { city: loc.city }), sound: alert.sound },
+        trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: times.maghrib, channelId: alert.channelId },
       });
       pending++;
     }
@@ -95,30 +109,31 @@ export async function reschedulePrayerAlerts() {
       if (kind === 'off') continue;
       const at = times[key];
       const label = L.prayer(key, day);
-      const channelId = kind === 'sound' ? 'prayer-sound' : 'prayer-silent';
 
       if (reminderBefore > 0) {
         const early = new Date(at.getTime() - reminderBefore * 60_000);
         if (early.getTime() > now && pending < MAX_PENDING) {
+          const alert = before(kind);
           await N.scheduleNotificationAsync({
             content: {
               title: L.t('notif.earlyTitle', { prayer: label, n: reminderBefore }),
               body: L.t('notif.earlyBody', { prayer: label, time: L.clockFull(at, loc.timeZone), city: loc.city }),
-              sound: kind === 'sound',
+              sound: alert.sound,
             },
-            trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: early, channelId },
+            trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: early, channelId: alert.channelId },
           });
           pending++;
         }
       }
       if (at.getTime() > now && pending < MAX_PENDING) {
+        const alert = atTime(kind);
         await N.scheduleNotificationAsync({
           content: {
             title: L.t('notif.title', { prayer: label, time: L.clockFull(at, loc.timeZone) }),
             body: L.t('notif.body', { prayer: label, city: loc.city }),
-            sound: kind === 'sound',
+            sound: alert.sound,
           },
-          trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId },
+          trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, channelId: alert.channelId },
         });
         pending++;
       }

@@ -99,6 +99,7 @@ export const en = {
   'prayers.at': '{prayer} at {time}',
   'prayers.markAs': 'Mark {prayer} as prayed',
   'alert.sound': 'Alert with sound',
+  'alert.adhan': 'Adhan',
   'alert.silent': 'Silent alert',
   'alert.off': 'No alert',
   'alert.state': '{prayer}: {state}. Tap to change.',
@@ -442,6 +443,7 @@ export const en = {
   'src.names': '99 Names of Allah',
   'src.times': 'Prayer times and Qibla',
   'src.cities': 'City coordinates',
+  'src.adhan': 'Adhan recording',
 
   // prayer settings
   'ps.title': 'Prayer settings',
@@ -472,6 +474,12 @@ export const en = {
   'ps.sound': 'Sound',
   'ps.silent': 'Silent',
   'ps.off': 'Off',
+  'ps.adhan': 'Adhan',
+  'ps.adhanTitle': 'Adhan sound',
+  'ps.adhanSub': 'The opening takbir, about {n} seconds',
+  'ps.adhanPlay': 'Play the adhan',
+  'ps.adhanStop': 'Stop the adhan',
+  'ps.adhanFooter': 'Phones limit alert sounds to 30 seconds, so the alert plays the opening “Allahu akbar” of the adhan. It is the same for every prayer, including Fajr. Reminders before a prayer use the normal alert sound.',
   'ps.reminder': 'Reminder before each prayer',
   'ps.none': 'None',
   'ps.reset': 'Reset to the usual settings for {country}',

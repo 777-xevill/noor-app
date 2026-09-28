@@ -13,7 +13,7 @@ import {
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 export type HighLatitude = 'auto' | 'middleOfTheNight' | 'seventhOfTheNight' | 'twilightAngle';
-export type AlertKind = 'off' | 'silent' | 'sound';
+export type AlertKind = 'off' | 'silent' | 'sound' | 'adhan';
 export type AdjustableTime = 'fajr' | 'sunrise' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 export type AlertPrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 
