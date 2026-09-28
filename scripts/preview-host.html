@@ -1,0 +1,76 @@
+<title>Noor App</title>
+<style>
+  :root {
+    --canvas: #e4e8ec;
+    --canvas-top: #f5f7f9;
+    --ink: #16181c;
+    --muted: #697079;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #24272c;
+      --canvas-top: #33373e;
+      --ink: #f1f2f4;
+      --muted: #969ca5;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #24272c;
+    --canvas-top: #33373e;
+    --ink: #f1f2f4;
+    --muted: #969ca5;
+    color-scheme: dark;
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    overflow: hidden;
+    background: linear-gradient(var(--canvas-top), var(--canvas));
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #root {
+    display: flex;
+    height: 100%;
+    flex: 1;
+  }
+  .boot {
+    margin: auto;
+    display: grid;
+    gap: 6px;
+    text-align: center;
+  }
+  .boot b {
+    font-size: 28px;
+    letter-spacing: -0.04em;
+  }
+  .boot span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+</style>
+<div id="root">
+  <div class="boot"><b>Noor</b><span>Loading the app preview…</span></div>
+</div>
+<script>
+  // The app is an Expo Router web build that expects to live at "/" and loads assets
+  // relative to the page. Pin the base URL to this page's folder, then present the
+  // route as "/" before the bundle boots.
+  (function () {
+    try {
+      if (/^https?:$/.test(location.protocol)) {
+        var dir = location.href.split("#")[0].split("?")[0].replace(/[^/]*$/, "");
+        var base = document.createElement("base");
+        base.href = dir;
+        document.head.appendChild(base);
+        if (location.pathname !== "/") history.replaceState(null, "", "/");
+      }
+    } catch (e) {}
+    var s = document.createElement("script");
+    s.src = "__BUNDLE__";
+    document.body.appendChild(s);
+  })();
+</script>
