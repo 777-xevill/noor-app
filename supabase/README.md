@@ -45,3 +45,15 @@ The rules are in `src/features/sync/merge.ts` and are checked by `npm run verify
 
 Settings → Account → Delete account calls `delete_my_account()`. This removes the login and the
 cloud copy. The phone keeps its own data.
+
+## Articles (optional)
+
+Run `migrations/0002_articles.sql`, then write articles in Studio's table editor, one row per
+language (`en` or `bn`) with the same `slug`. An article appears in Lessons only when two things
+are true:
+
+- `reviewed_by` names the scholar who checked it.
+- `published_at` is in the past.
+
+Row-level security enforces both. Quote the Quran and hadith exactly as a named source gives them,
+and list the sources in `sources` as `[{ "title": "Sahih al-Bukhari 1", "url": "https://…" }]`.

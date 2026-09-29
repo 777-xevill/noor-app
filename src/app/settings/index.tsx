@@ -28,6 +28,9 @@ const SOURCES: [Key, string][] = [
   ['src.times', 'adhan (Batoul Apps), checked against api.aladhan.com'],
   ['src.cities', '© OpenStreetMap contributors'],
   ['src.adhan', ADHAN_CREDIT],
+  ['src.hadith', 'Sahih Muslim — Arabic; English, Abdul Hamid Siddiqui; Bangla, Islamic Foundation; via fawazahmed0/hadith-api'],
+  ['src.wbw', 'Quran.com (meanings, transliteration, word audio), checked against the Tanzil text'],
+  ['src.places', '© OpenStreetMap contributors, via the Overpass API'],
 ];
 
 export default function SettingsScreen() {

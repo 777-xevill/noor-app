@@ -6,6 +6,8 @@ import { addDays, type DayParts, dayKey, formatClock, wallDay } from '../../src/
 import { toHijri } from '../../src/lib/hijri';
 import { bearingDeg, distanceKm, KAABA } from '../../src/lib/geo';
 import { toPlaces } from '../../src/features/places/overpass';
+import { WBW } from '../../src/data/wbw';
+import { buildQuiz } from '../../src/features/learn/quiz';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
@@ -277,10 +279,36 @@ async function main() {
     ['places: bearing to the Kaaba matches the Qibla', Math.abs(bearingDeg(dhaka.lat, dhaka.lng, KAABA.lat, KAABA.lng) - dhakaQibla) < 0.05],
     ['places: nearest first, duplicates removed, north is 0°', placeList.length === 2 && placeList[0].id === 'way/2' && Math.round(placeList[1].bearing) === 0],
   );
+  // Lessons: the word-by-word data still spells each ayah of the bundled Tanzil text, letter for letter.
+  const letters = (text: string) =>
+    text
+      .replace(/[\u064b-\u065f\u0670\u06d6-\u06ed\u0640\u200c\u200d\ufeff]/g, '')
+      .replace(/\u0671/g, '\u0627')
+      .replace(/\u0622/g, '\u0627')
+      .replace(/[^\u0621-\u064a]/g, '');
+  for (const lesson of WBW) {
+    const q = JSON.parse(readFileSync(join(root, `assets/data/quran/${lesson.surah}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string }[] };
+    const same =
+      lesson.ayahs.length === q.ayahs.length &&
+      lesson.ayahs.every((a) => letters(a.words.map((w) => w.ar).join('')) === letters(q.ayahs.find((x) => x.n === a.n)?.ar ?? ''));
+    rewardChecks.push([`lessons: surah ${lesson.surah} word by word matches the Quran text`, same]);
+  }
+  const quizOk = WBW.every((lesson) =>
+    (['en', 'bn'] as const).every((lang) => {
+      const quiz = buildQuiz(lesson, WBW, lang, 8, 7);
+      const again = buildQuiz(lesson, WBW, lang, 8, 7);
+      return (
+        quiz.length === Math.min(8, new Set(lesson.ayahs.flatMap((a) => a.words.map((w) => w[lang].trim()))).size) &&
+        quiz.every((qq, i) => new Set(qq.options).size === 4 && qq.options[qq.answer] === qq.word[lang].trim() && again[i].options.join() === qq.options.join())
+      );
+    }),
+  );
+  rewardChecks.push(['lessons: every quiz question has one right answer among four distinct options', quizOk]);
+
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);
