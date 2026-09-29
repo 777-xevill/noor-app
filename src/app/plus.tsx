@@ -9,6 +9,7 @@ import { Reveal } from '@/components/Reveal';
 import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Txt } from '@/components/Txt';
+import { PRIVACY_URL, TERMS_URL } from '@/lib/site';
 import { useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
 import { DEMO_ENABLED } from '@/features/demo/seed';
@@ -174,6 +175,20 @@ export default function PlusScreen() {
             <Txt variant="micro" tone="muted" style={{ textAlign: 'center', paddingHorizontal: 12 }}>
               {L.t('plus.legal', { store })}
             </Txt>
+            {PRIVACY_URL && TERMS_URL && (
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18 }}>
+                {[
+                  [L.t('legal.terms'), TERMS_URL],
+                  [L.t('legal.privacy'), PRIVACY_URL],
+                ].map(([label, url]) => (
+                  <Press key={url} onPress={() => Linking.openURL(url)} accessibilityRole="link" style={{ padding: 4 }}>
+                    <Txt variant="caption" tone="soft" style={{ textDecorationLine: 'underline' }}>
+                      {label}
+                    </Txt>
+                  </Press>
+                ))}
+              </View>
+            )}
           </View>
         </Reveal>
       ) : (

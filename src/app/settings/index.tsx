@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
 import { Field } from '@/components/Field';
@@ -12,6 +12,7 @@ import { LANGS, type Lang, useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
 import { ADHAN_CREDIT } from '@/features/prayer/adhan';
 import { useQuranProgress } from '@/features/quran/progress';
+import { PRIVACY_URL, TERMS_URL } from '@/lib/site';
 import { usePlus } from '@/features/premium/store';
 import { useSyncMeta } from '@/features/sync/store';
 import { type DarkStyle, type ThemeMode, useSettings } from '@/features/settings/store';
@@ -109,8 +110,14 @@ export default function SettingsScreen() {
             s.set({ onboarded: false });
             router.replace('/onboarding');
           }}
-          last
+          last={!PRIVACY_URL}
         />
+        {PRIVACY_URL && TERMS_URL && (
+          <>
+            <ListRow icon="shield" title={L.t('legal.privacy')} onPress={() => Linking.openURL(PRIVACY_URL!)} />
+            <ListRow icon="scroll" title={L.t('legal.terms')} onPress={() => Linking.openURL(TERMS_URL!)} last />
+          </>
+        )}
       </ListGroup>
 
       <ListGroup title={L.t('settings.sources')} footer={L.t('settings.sourcesFooter')}>

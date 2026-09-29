@@ -157,14 +157,26 @@ async function main() {
     console.log(`${ok ? 'ok  ' : 'FAIL'} phrase ${p.label}${byWord ? ' (each word found)' : ''}`);
   }
 
-  // Quran excerpts shown in the app must be exact prefixes of their ayah.
+  // Quran excerpts shown in the app must be exact prefixes of their ayah, in every language given.
   for (const [name, ex] of Object.entries(QURAN_EXCERPTS)) {
     checks++;
-    const s = JSON.parse(readFileSync(join(root, `assets/data/quran/${ex.surah}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string }[] };
-    const ok = !!s.ayahs.find((a) => a.n === ex.ayah)?.ar.startsWith(ex.ar);
+    const s = JSON.parse(readFileSync(join(root, `assets/data/quran/${ex.surah}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string; en: string; bn: string }[] };
+    const ayah = s.ayahs.find((a) => a.n === ex.ayah);
+    const ok =
+      !!ayah &&
+      ayah.ar.replace(/^۞ /, '').startsWith(ex.ar) &&
+      ayah.en.startsWith(ex.en) &&
+      (!('bn' in ex) || ayah.bn.startsWith(ex.bn));
     if (!ok) failures++;
     console.log(`${ok ? 'ok  ' : 'FAIL'} quran excerpt ${name} (${ex.surah}:${ex.ayah})`);
   }
+
+  // The website quotes 24:35 too; it must be the same verified excerpt.
+  checks++;
+  const site = readFileSync(join(root, 'site/index.html'), 'utf8');
+  const siteOk = [QURAN_EXCERPTS.noor.ar, QURAN_EXCERPTS.noor.en, QURAN_EXCERPTS.noor.bn].every((text) => site.includes(text));
+  if (!siteOk) failures++;
+  console.log(`${siteOk ? 'ok  ' : 'FAIL'} website quotes 24:35 exactly`);
 
   // Milestones: Sunnah fasts are recognised on the right Hijri days; a fast logged on Eid never counts.
   const hijriDay = (from: DayParts, month: number, day: number) => {

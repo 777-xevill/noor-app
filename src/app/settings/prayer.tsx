@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
+import Constants from 'expo-constants';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { router } from 'expo-router';
 import { Icon } from '@/components/Icon';
@@ -216,6 +218,21 @@ export default function PrayerSettingsScreen() {
           ))}
         </ListGroup>
         <AdhanPreview />
+        {/* Android 12+ may delay alerts unless the app is allowed to set exact alarms. */}
+        {Platform.OS === 'android' && Number(Platform.Version) >= 31 && (
+          <ListGroup footer={L.t('ps.exactFooter')}>
+            <ListRow
+              icon="clock"
+              title={L.t('ps.exact')}
+              onPress={() =>
+                IntentLauncher.startActivityAsync('android.settings.REQUEST_SCHEDULE_EXACT_ALARM', {
+                  data: `package:${Constants.expoConfig?.android?.package ?? ''}`,
+                }).catch(() => {})
+              }
+              last
+            />
+          </ListGroup>
+        )}
         <ListGroup>
           <View style={{ gap: 8, paddingVertical: 12 }}>
             <Txt variant="bodyStrong">{L.t('ps.reminder')}</Txt>

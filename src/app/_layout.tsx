@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -82,6 +83,9 @@ function usePrayerAlerts(enabled: boolean) {
   }, [enabled]);
 }
 
+// Keep the launch screen up until fonts and saved data are ready, so the first frame is complete.
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts(fontAssets);
   const storesReady = useStoresReady();
@@ -92,7 +96,12 @@ export default function RootLayout() {
     if (storesReady) startBilling();
   }, [storesReady]);
 
-  if (!fontsLoaded || !storesReady) return <View style={{ flex: 1, backgroundColor: t.canvas }} />;
+  const ready = fontsLoaded && storesReady;
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync().catch(() => {});
+  }, [ready]);
+
+  if (!ready) return <View style={{ flex: 1, backgroundColor: t.canvas }} />;
 
   return (
     <SafeAreaProvider>

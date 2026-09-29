@@ -755,6 +755,10 @@ export const en = {
   'plus.thanks': 'Jazakumullahu khayran for supporting Noor.',
   'plus.manage': 'Manage subscription',
   'plus.lockedDesign': 'Noor Plus design',
+  'ps.exact': 'Alert on the exact minute',
+  'ps.exactFooter': 'If prayer alerts arrive a few minutes late, turn on “Alarms & reminders” for Noor on this screen.',
+  'legal.privacy': 'Privacy policy',
+  'legal.terms': 'Terms of use',
 } as const;
 
 export type Key = keyof typeof en;

@@ -731,4 +731,8 @@ export const bn: Record<Key, string> = {
   'plus.thanks': 'নূরকে সহায়তা করার জন্য জাযাকুমুল্লাহু খাইরান।',
   'plus.manage': 'সাবস্ক্রিপশন পরিচালনা',
   'plus.lockedDesign': 'নূর প্লাস ডিজাইন',
+  'ps.exact': 'ঠিক মিনিটে অ্যালার্ট',
+  'ps.exactFooter': 'নামাজের অ্যালার্ট কয়েক মিনিট দেরিতে এলে, এই স্ক্রিনে নূরের জন্য “Alarms & reminders” চালু করুন।',
+  'legal.privacy': 'গোপনীয়তা নীতি',
+  'legal.terms': 'ব্যবহারের শর্তাবলি',
 };
