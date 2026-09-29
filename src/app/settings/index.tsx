@@ -12,6 +12,7 @@ import { LANGS, type Lang, useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
 import { ADHAN_CREDIT } from '@/features/prayer/adhan';
 import { useQuranProgress } from '@/features/quran/progress';
+import { useSyncMeta } from '@/features/sync/store';
 import { type ThemeMode, useSettings } from '@/features/settings/store';
 
 // [label key, source]. Sources are proper names and stay as published.
@@ -31,6 +32,7 @@ export default function SettingsScreen() {
   const s = useSettings();
   const L = useT();
   const goal = useQuranProgress((q) => q.goalMinutes);
+  const accountEmail = useSyncMeta((m) => m.email);
   const setGoal = useQuranProgress((q) => q.setGoalMinutes);
 
   return (
@@ -65,6 +67,10 @@ export default function SettingsScreen() {
           ]}
         />
       </View>
+
+      <ListGroup>
+        <ListRow icon="cloud" title={L.t('settings.account')} value={accountEmail ?? L.t('settings.accountOff')} onPress={() => router.push('/settings/account')} last />
+      </ListGroup>
 
       <ListGroup title={L.t('settings.prayer')}>
         <ListRow icon="mapPin" title={L.t('settings.location')} value={s.location.city} onPress={() => router.push('/settings/location')} />

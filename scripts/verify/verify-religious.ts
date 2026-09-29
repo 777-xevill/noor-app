@@ -15,6 +15,7 @@ import { prayerTimesFor } from '../../src/features/prayer/times';
 import { computeStats } from '../../src/features/rewards/milestones';
 import { streakOf } from '../../src/features/rewards/streaks';
 import { widgetSnapshot, widgetTimeline } from '../../src/features/widget/snapshot';
+import { mergeSyncData, type SyncData } from '../../src/features/sync/merge';
 
 const ALADHAN_METHOD: Partial<Record<CalcMethod, number>> = {
   Karachi: 1,
@@ -215,10 +216,41 @@ async function main() {
     ['widget: timeline changes date at local midnight', timeline.some((e) => e.props.dateLine.startsWith('30 Sep ') && e.date.getTime() < wTimes.isha.getTime() + 6 * 3_600_000 && e.props.nextName === 'Fajr')],
   ];
   rewardChecks.push(...rewardChecksWidget);
+
+  // Sync: when two phones both changed, nothing logged on either side is lost.
+  const entry = (text: string, updatedAt: number) => ({ reflection: text, moods: [], extras: [], deeds: [], updatedAt });
+  const base = (over: Partial<SyncData>): SyncData => ({
+    v: 1,
+    settings: { at: 0, value: {} as SyncData['settings']['value'] },
+    prayers: {}, reading: {}, lastRead: null, bookmarks: [], goalMinutes: 10, journal: {}, fasts: {}, dhikr: {},
+    savedDuas: [], juzRead: {}, taraweeh: {}, earned: {},
+    ...over,
+  });
+  const phoneA = base({
+    settings: { at: 100, value: { displayName: 'A' } as SyncData['settings']['value'] },
+    prayers: { '2026-09-28': ['fajr', 'dhuhr'] }, reading: { '2026-09-28': 300 }, bookmarks: ['1:1'],
+    journal: { '2026-09-28': entry('older', 1) }, earned: { prayerFirstDay: '2026-09-20' }, fasts: { '2026-09-28': 'fasted' },
+  });
+  const phoneB = base({
+    settings: { at: 200, value: { displayName: 'B' } as SyncData['settings']['value'] },
+    prayers: { '2026-09-28': ['asr'], '2026-09-27': ['isha'] }, reading: { '2026-09-28': 120 }, bookmarks: ['2:255'],
+    journal: { '2026-09-28': entry('newer', 2) }, earned: { prayerFirstDay: '2026-09-10' }, fasts: { '2026-09-28': 'missed' },
+  });
+  const m = mergeSyncData(phoneA, phoneB);
+  const syncChecks: [string, boolean][] = [
+    ['sync: logged prayers from both phones kept', m.prayers['2026-09-28'].length === 3 && m.prayers['2026-09-27']?.[0] === 'isha'],
+    ['sync: reading time keeps the higher count', m.reading['2026-09-28'] === 300],
+    ['sync: journal day keeps its newest edit', m.journal['2026-09-28'].reflection === 'newer'],
+    ['sync: settings follow the later change', m.settings.value.displayName === 'B'],
+    ['sync: milestone keeps the earliest date', m.earned.prayerFirstDay === '2026-09-10'],
+    ['sync: bookmarks from both phones kept', m.bookmarks.length === 2],
+    ['sync: a fast recorded on this phone wins', m.fasts['2026-09-28'] === 'fasted'],
+  ];
+  rewardChecks.push(...syncChecks);
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${label.startsWith('widget') ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

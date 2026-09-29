@@ -28,7 +28,7 @@ export type PrayerPrefs = {
 
 export type QuranPrefs = { showTranslit: boolean; showEnglish: boolean; showBangla: boolean; arabicSize: number };
 
-type SettingsState = PrayerPrefs & {
+export type SettingsState = PrayerPrefs & {
   themeMode: ThemeMode;
   language: Lang;
   displayName: string;

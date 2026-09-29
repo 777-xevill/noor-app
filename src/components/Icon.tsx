@@ -79,6 +79,11 @@ import CircleQuestionMark from 'lucide-react-native/icons/circle-question-mark';
 import Crosshair from 'lucide-react-native/icons/crosshair';
 import Gem from 'lucide-react-native/icons/gem';
 import Award from 'lucide-react-native/icons/award';
+import Cloud from 'lucide-react-native/icons/cloud';
+import CloudCheck from 'lucide-react-native/icons/cloud-check';
+import LogOut from 'lucide-react-native/icons/log-out';
+import Mail from 'lucide-react-native/icons/mail';
+import RefreshCw from 'lucide-react-native/icons/refresh-cw';
 
 type IconProps = { size?: number; color: string; strokeWidth?: number; fill?: string };
 
@@ -209,6 +214,11 @@ const ICONS = {
   crosshair: lucide(Crosshair),
   gem: lucide(Gem),
   award: lucide(Award),
+  cloud: lucide(Cloud),
+  cloudCheck: lucide(CloudCheck),
+  logOut: lucide(LogOut),
+  mail: lucide(Mail),
+  refresh: lucide(RefreshCw),
   kaaba: Kaaba,
 } satisfies Record<string, ComponentType<IconProps>>;
 
