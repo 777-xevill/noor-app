@@ -12,8 +12,9 @@ import { LANGS, type Lang, useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
 import { ADHAN_CREDIT } from '@/features/prayer/adhan';
 import { useQuranProgress } from '@/features/quran/progress';
+import { usePlus } from '@/features/premium/store';
 import { useSyncMeta } from '@/features/sync/store';
-import { type ThemeMode, useSettings } from '@/features/settings/store';
+import { type DarkStyle, type ThemeMode, useSettings } from '@/features/settings/store';
 
 // [label key, source]. Sources are proper names and stay as published.
 const SOURCES: [Key, string][] = [
@@ -33,6 +34,7 @@ export default function SettingsScreen() {
   const L = useT();
   const goal = useQuranProgress((q) => q.goalMinutes);
   const accountEmail = useSyncMeta((m) => m.email);
+  const plus = usePlus();
   const setGoal = useQuranProgress((q) => q.setGoalMinutes);
 
   return (
@@ -66,9 +68,21 @@ export default function SettingsScreen() {
             { value: 'system', label: L.t('settings.auto') },
           ]}
         />
+        <Segmented<DarkStyle>
+          value={plus ? s.darkStyle : 'graphite'}
+          onChange={(darkStyle) => (darkStyle === 'midnight' && !plus ? router.push('/plus') : s.set({ darkStyle }))}
+          options={[
+            { value: 'graphite', label: L.t('settings.graphite') },
+            { value: 'midnight', label: `${L.t('settings.midnight')} ✦` },
+          ]}
+        />
+        <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
+          {L.t('settings.midnightNote')}
+        </Txt>
       </View>
 
       <ListGroup>
+        <ListRow icon="sparkles" title={L.t('settings.plus')} value={plus ? L.t('settings.plusOn') : undefined} onPress={() => router.push('/plus')} />
         <ListRow icon="cloud" title={L.t('settings.account')} value={accountEmail ?? L.t('settings.accountOff')} onPress={() => router.push('/settings/account')} last />
       </ListGroup>
 

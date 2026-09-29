@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Platform, useColorScheme } from 'react-native';
+import { usePlus } from '@/features/premium/store';
 import { useSettings } from '@/features/settings/store';
-import { dark, light, type Palette, type Scheme } from './tokens';
+import { dark, light, midnight, type Palette, type Scheme } from './tokens';
 
 /**
  * On web the host page may stamp `data-theme="light" | "dark"` on <html> (e.g. an embedding viewer).
@@ -34,5 +35,8 @@ export function useScheme(): Scheme {
 }
 
 export function useTheme(): Palette {
-  return useScheme() === 'dark' ? dark : light;
+  const scheme = useScheme();
+  const wantsMidnight = useSettings((s) => s.darkStyle === 'midnight');
+  const plus = usePlus();
+  return scheme === 'dark' ? (wantsMidnight && plus ? midnight : dark) : light;
 }

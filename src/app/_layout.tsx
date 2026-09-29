@@ -16,6 +16,8 @@ import { usePrayerLog } from '@/features/prayer/log';
 import { reschedulePrayerAlerts } from '@/features/prayer/notifications';
 import { useQuranProgress } from '@/features/quran/progress';
 import { useSettings } from '@/features/settings/store';
+import { startBilling } from '@/features/premium/billing';
+import { usePlusStore } from '@/features/premium/store';
 import { startCloudSync } from '@/features/sync/engine';
 import { useSyncMeta } from '@/features/sync/store';
 import { syncWidgets } from '@/features/widget/sync';
@@ -28,7 +30,7 @@ function useStoresReady() {
   useEffect(() => {
     // Every persisted store must be loaded before the first screen renders, so nothing flashes empty
     // and no early write can overwrite saved data.
-    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta].map(whenHydrated)).then(() => {
+    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta, usePlusStore].map(whenHydrated)).then(() => {
       seedDemoData();
       setReady(true);
     });
@@ -86,6 +88,9 @@ export default function RootLayout() {
   const t = useTheme();
   usePrayerAlerts(storesReady && Platform.OS !== 'web');
   useEffect(() => (storesReady ? startCloudSync() : undefined), [storesReady]);
+  useEffect(() => {
+    if (storesReady) startBilling();
+  }, [storesReady]);
 
   if (!fontsLoaded || !storesReady) return <View style={{ flex: 1, backgroundColor: t.canvas }} />;
 

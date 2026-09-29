@@ -82,6 +82,21 @@ export const dark: Palette = {
   shadowSoft: '0px 10px 26px -14px rgba(0,0,0,0.45)',
 };
 
+/** Noor Plus: true black for OLED screens, keeping Graphite's greys for text and glass. */
+export const midnight: Palette = {
+  ...dark,
+  canvasTop: '#101113',
+  canvas: '#000000',
+  glow: '#23262B',
+  glass: 'rgba(255,255,255,0.06)',
+  glassStrong: 'rgba(28,30,34,0.92)',
+  glassBorder: 'rgba(255,255,255,0.09)',
+  surface: '#131417',
+  tabBar: 'rgba(30,32,36,0.84)',
+  shadow: '0px 22px 44px -20px rgba(0,0,0,0.9)',
+  shadowSoft: '0px 10px 26px -14px rgba(0,0,0,0.8)',
+};
+
 /** Colours used on top of photographs — identical in both themes. */
 export const onPhoto = {
   text: '#FFFFFF',

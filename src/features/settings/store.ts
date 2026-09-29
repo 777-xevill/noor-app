@@ -28,8 +28,12 @@ export type PrayerPrefs = {
 
 export type QuranPrefs = { showTranslit: boolean; showEnglish: boolean; showBangla: boolean; arabicSize: number };
 
+export type DarkStyle = 'graphite' | 'midnight';
+
 export type SettingsState = PrayerPrefs & {
   themeMode: ThemeMode;
+  /** Midnight (true black) is a Noor Plus perk; Graphite otherwise. */
+  darkStyle: DarkStyle;
   language: Lang;
   displayName: string;
   onboarded: boolean;
@@ -53,6 +57,7 @@ const NO_ADJUSTMENTS: Record<AdjustableTime, number> = { fajr: 0, sunrise: 0, dh
 const DEFAULTS = {
   // Light "Mist" is the signature look; dark stays one tap away.
   themeMode: 'light' as ThemeMode,
+  darkStyle: 'graphite' as DarkStyle,
   language: deviceLang(),
   displayName: '',
   onboarded: false,

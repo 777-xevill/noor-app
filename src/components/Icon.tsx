@@ -214,6 +214,7 @@ const ICONS = {
   crosshair: lucide(Crosshair),
   gem: lucide(Gem),
   award: lucide(Award),
+  sparkles: lucide(Sparkles),
   cloud: lucide(Cloud),
   cloudCheck: lucide(CloudCheck),
   logOut: lucide(LogOut),

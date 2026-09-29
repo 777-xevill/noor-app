@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Image, Platform, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { LinearGradient } from 'expo-linear-gradient';
 import { captureRef } from 'react-native-view-shot';
@@ -12,6 +13,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Txt } from '@/components/Txt';
 import { useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
+import { CardPattern, PATTERNS, type PatternKind } from '@/features/cards/patterns';
+import { usePlus } from '@/features/premium/store';
 import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
 import { onPhoto } from '@/theme/tokens';
@@ -22,18 +25,27 @@ const KINDS: { id: 'eid' | 'ramadan'; title: Key; line: Key }[] = [
   { id: 'ramadan', title: 'cards.ramadan', line: 'cards.ramadanLine' },
 ];
 
-const BACKGROUNDS = [
-  require('../../assets/images/hero-medina.jpg'),
-  require('../../assets/images/dome-ubudiah.jpg'),
-  require('../../assets/images/sunset-istanbul.jpg'),
-  require('../../assets/images/minaret.jpg'),
-  require('../../assets/images/dune.jpg'),
+type Background = { photo: number } | { pattern: PatternKind };
+
+// Photographs are free; the drawn patterns are a Noor Plus thank-you.
+const BACKGROUNDS: Background[] = [
+  { photo: require('../../assets/images/hero-medina.jpg') },
+  { photo: require('../../assets/images/dome-ubudiah.jpg') },
+  { photo: require('../../assets/images/sunset-istanbul.jpg') },
+  { photo: require('../../assets/images/minaret.jpg') },
+  { photo: require('../../assets/images/dune.jpg') },
+  ...PATTERNS.map((pattern) => ({ pattern })),
 ];
+
+function Fill({ bg }: { bg: Background }) {
+  return 'photo' in bg ? <Image source={bg.photo} resizeMode="cover" style={StyleSheet.absoluteFill} /> : <CardPattern kind={bg.pattern} />;
+}
 
 export default function CardsScreen() {
   const t = useTheme();
   const L = useT();
   const defaultName = useSettings((s) => s.displayName);
+  const plus = usePlus();
   const [kind, setKind] = useState(KINDS[0]);
   const [bg, setBg] = useState(0);
   const [name, setName] = useState(defaultName);
@@ -69,8 +81,10 @@ export default function CardsScreen() {
 
       {/* The card itself — this view is what gets captured and shared. */}
       <View ref={card} collapsable={false} style={{ aspectRatio: 4 / 5, borderRadius: 30, overflow: 'hidden', justifyContent: 'flex-end', padding: 24, boxShadow: t.shadow }}>
-        <Image source={BACKGROUNDS[bg]} resizeMode="cover" style={StyleSheet.absoluteFill} />
-        <LinearGradient colors={['rgba(14,16,19,0.05)', 'rgba(14,16,19,0.25)', 'rgba(14,16,19,0.82)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
+        <Fill bg={BACKGROUNDS[bg]} />
+        {'photo' in BACKGROUNDS[bg] && (
+          <LinearGradient colors={['rgba(14,16,19,0.05)', 'rgba(14,16,19,0.25)', 'rgba(14,16,19,0.82)']} locations={[0, 0.4, 1]} style={StyleSheet.absoluteFill} />
+        )}
         <View style={{ position: 'absolute', top: 22, left: 24, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Icon name="moonStar" size={18} color={onPhoto.text} />
           <Txt variant="eyebrow" color={onPhoto.textSoft}>
@@ -89,13 +103,28 @@ export default function CardsScreen() {
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-        {BACKGROUNDS.map((src, i) => (
-          <Press key={i} onPress={() => setBg(i)} scaleTo={0.92} accessibilityRole="radio" accessibilityState={{ selected: i === bg }}>
-            <View style={{ width: 64, height: 80, borderRadius: 16, overflow: 'hidden', borderWidth: i === bg ? 2.5 : 0, borderColor: t.ink }}>
-              <Image source={src} resizeMode="cover" style={{ width: '100%', height: '100%' }} />
-            </View>
-          </Press>
-        ))}
+        {BACKGROUNDS.map((b, i) => {
+          const locked = 'pattern' in b && !plus;
+          return (
+            <Press
+              key={i}
+              onPress={() => (locked ? router.push('/plus') : setBg(i))}
+              scaleTo={0.92}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: i === bg }}
+              accessibilityLabel={locked ? L.t('plus.lockedDesign') : undefined}
+            >
+              <View style={{ width: 64, height: 80, borderRadius: 16, overflow: 'hidden', borderWidth: i === bg ? 2.5 : 0, borderColor: t.ink }}>
+                <Fill bg={b} />
+                {locked && (
+                  <View style={{ position: 'absolute', right: 6, bottom: 6, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.9)', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="sparkles" size={12} color="#16181C" />
+                  </View>
+                )}
+              </View>
+            </Press>
+          );
+        })}
       </ScrollView>
 
       <Field placeholder={L.t('cards.namePh')} value={name} onChangeText={setName} maxLength={30} autoCapitalize="words" />
