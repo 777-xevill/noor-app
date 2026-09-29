@@ -8,6 +8,13 @@ export type SourceForModel = { tag: string; text: string };
 
 export const MAX_QUESTION = 500;
 
+/**
+ * Request settings. gpt-oss models think before answering and that thinking counts against
+ * max_tokens, so keep it light and leave room for the reply.
+ */
+export const KEYWORD_OPTIONS = { temperature: 0.2, max_tokens: 600, reasoning_effort: 'low' };
+export const ANSWER_OPTIONS = { temperature: 0.2, max_tokens: 3000, reasoning_effort: 'medium' };
+
 /** Step 1: turn a question (English or Bangla) into English words to search the translations. */
 export function keywordMessages(question: string): Message[] {
   return [
@@ -40,8 +47,10 @@ export function answerMessages(question: string, lang: 'en' | 'bn', sources: Sou
       content: [
         'You are the assistant in Noor, a Muslim app. Answer using ONLY the sources below, which are translations of the Quran (tags like [Q 2:153]) and duas from Hisnul Muslim (tags like [D 45]).',
         'Rules:',
+        '- Use only sources that directly address the question. Ignore a source that merely shares a word with it (for example a story where the word appears in another sense).',
         '- Cite every statement with the tag of the source it comes from, exactly as written, e.g. [Q 2:153]. Use no other tags.',
-        '- Never quote or invent a verse, hadith or dua that is not in the sources. Do not write Arabic.',
+        '- Never quote or invent a verse, hadith or dua that is not in the sources. When you quote a source, copy its words exactly; if the source is in a different language from your answer, describe it in your own words without quotation marks. Do not write Arabic.',
+        '- Read each verse in its context (the surah is named). Do not say who a verse speaks about, or what it promises, unless the source itself says so.',
         '- If the sources do not answer the question, say so plainly and suggest asking a knowledgeable scholar or local imam.',
         '- For questions about rulings (halal, haram, obligations), explain what the sources say, note that scholars may differ, and advise asking a qualified scholar. Do not issue fatwas.',
         '- Be gentle, humble and brief: at most 150 words. No headings.',
@@ -65,6 +74,10 @@ export function cleanAnswer(answer: string, allowed: string[]): { text: string; 
   let dropped = 0;
   const text = answer
     .replace(/<[^>]*>/g, '')
+    .replace(/[【［]/g, '[')
+    .replace(/[】］]/g, ']')
+    .replace(/\*\*|__/g, '')
+    .replace(/^[ \t]*[*-][ \t]+/gm, '• ')
     .replace(/\[([^\]]{1,20})\]/g, (whole, inner: string) => {
       const tag = inner.trim().replace(/\s+/g, ' ');
       if (!/^(Q \d{1,3}:\d{1,3}|D \d{1,3})$/.test(tag)) return whole;

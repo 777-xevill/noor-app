@@ -15,7 +15,7 @@ export type Passage = {
 };
 
 const STOP = new Set(
-  'a an and are as at be by for from has have he her his i in is it its me my of on or our she so that the their them they this to us was we were what when which who will with you your do does did how why not no nor all any also than then there these those into upon unto shall would should can could may might o whom whose one ones'.split(
+  'a an and are as at be by for from has have he her his i in is it its me my of on or our she so that the their them they this to us was we were what when which who will with you your do does did how why not no nor all any also than then there these those into upon unto shall would should can could may might o whom whose one ones quran quranic qur verse verses islam islamic muslim teaching teachings guidance meaning translation'.split(
     ' ',
   ),
 );
@@ -24,7 +24,16 @@ const STOP = new Set(
 export function tokens(text: string): string[] {
   return (text.toLowerCase().match(/[\p{L}\p{M}]+/gu) ?? [])
     .filter((w) => w.length > 1 && !STOP.has(w))
-    .map((w) => (/^[a-z]+$/.test(w) ? w.replace(/(ing|ed|es|s)$/, '').replace(/(.)\1$/, '$1') || w : w));
+    .map((w) => (/^[a-z]+$/.test(w) ? stem(w) : w));
+}
+
+/** A light English stemmer: "patience", "patient" and "patiently" all become "pati". */
+function stem(w: string): string {
+  let s = w.replace(/ies$/, 'y').replace(/(ing|ed|es|s)$/, '');
+  s = s.replace(/(fulness|ousness|iveness|ness|fully|ful|ly)$/, '');
+  s = s.replace(/(ence|ance|ent|ant|ion|ment|e)$/, '');
+  s = s.replace(/(.)\1$/, '$1');
+  return s.length >= 3 ? s : w;
 }
 
 export type Index = { passages: Passage[]; docs: string[][]; df: Map<string, number>; avg: number };
@@ -56,8 +65,18 @@ export function search(index: Index, words: string[], limit = 8): Passage[] {
     }
     if (s > 0) scored.push({ i, s });
   });
-  return scored
-    .sort((x, y) => y.s - x.s)
-    .slice(0, limit)
-    .map(({ i }) => index.passages[i]);
+  // At most two passages from any one surah, so a single story using the word can't crowd out the rest.
+  const perSurah = new Map<number, number>();
+  const out: Passage[] = [];
+  for (const { i } of scored.sort((x, y) => y.s - x.s)) {
+    const p = index.passages[i];
+    if (p.surah) {
+      const n = perSurah.get(p.surah) ?? 0;
+      if (n >= 2) continue;
+      perSurah.set(p.surah, n + 1);
+    }
+    out.push(p);
+    if (out.length >= limit) break;
+  }
+  return out;
 }

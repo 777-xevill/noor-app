@@ -1,7 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import type { Lang } from '@/i18n/langs';
+import { SURAHS } from '@/data/surahs';
 import { loadCorpus } from './corpus';
-import { answerMessages, cleanAnswer, DEFAULT_MODEL, keywordMessages, type Message, parseKeywords } from './prompts';
+import { ANSWER_OPTIONS, answerMessages, cleanAnswer, DEFAULT_MODEL, KEYWORD_OPTIONS, keywordMessages, type Message, parseKeywords } from './prompts';
 import { type Passage, search } from './search';
 
 // Ask Noor runs through the `ask` edge function (supabase/functions/ask), which keeps the Groq key
@@ -17,11 +18,11 @@ export class AskError extends Error {
   }
 }
 
-async function direct(messages: Message[], maxTokens: number) {
+async function direct(messages: Message[], options: Record<string, unknown>) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${DIRECT_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: DEFAULT_MODEL, messages, temperature: 0.2, max_tokens: maxTokens }),
+    body: JSON.stringify({ model: DEFAULT_MODEL, messages, ...options }),
   });
   if (res.status === 429) throw new AskError('limit');
   if (!res.ok) throw new AskError('network');
@@ -48,16 +49,20 @@ export async function askNoor(question: string, lang: Lang, onStage: (s: AskStag
   if (!askEnabled) throw new AskError('off');
   onStage('searching');
   const [keywordReply, index] = await Promise.all([
-    supabase ? viaServer({ phase: 'keywords', question }) : direct(keywordMessages(question), 120),
+    supabase ? viaServer({ phase: 'keywords', question }) : direct(keywordMessages(question), KEYWORD_OPTIONS),
     loadCorpus(),
   ]);
   const passages = search(index, [...parseKeywords(keywordReply), question], 8);
 
   onStage('writing');
-  const forModel = passages.map((p) => ({ tag: p.tag, text: p.en }));
+  // In Bangla, give the model the published Bangla translation, so any quote is Muhiuddin Khan's words.
+  const forModel = passages.map((p) => ({
+    tag: p.tag,
+    text: `(${p.surah ? `Surah ${SURAHS[p.surah - 1].name}` : `Hisnul Muslim: ${p.chapter}`}) ${lang === 'bn' && p.bn ? p.bn : p.en}`,
+  }));
   const reply = supabase
     ? await viaServer({ phase: 'answer', question, lang, sources: forModel })
-    : await direct(answerMessages(question, lang, forModel), 700);
+    : await direct(answerMessages(question, lang, forModel), ANSWER_OPTIONS);
   const { text, cited } = cleanAnswer(reply, passages.map((p) => p.tag));
   // Show the sources the answer cites; if it cites none, show what it was given.
   const shown = cited.length ? cited.map((tag) => passages.find((p) => p.tag === tag)!) : passages.slice(0, 3);

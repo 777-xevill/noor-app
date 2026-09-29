@@ -43,3 +43,6 @@ yarn-error.*
 # web preview builds
 dist-preview/
 preview/
+
+# scratch scripts
+.tmp/

@@ -12,7 +12,8 @@ const out = join(root, 'preview');
 execSync('npx expo export -p web --output-dir dist-preview', {
   cwd: root,
   stdio: 'inherit',
-  env: { ...process.env, EXPO_PUBLIC_DEMO_DATA: '1' },
+  // Secrets from .env.local must never reach the public preview; an empty variable wins over .env files.
+  env: { ...process.env, EXPO_PUBLIC_DEMO_DATA: '1', EXPO_PUBLIC_GROQ_API_KEY: '' },
 });
 
 const walk = (dir) =>

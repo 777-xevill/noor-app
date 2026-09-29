@@ -333,12 +333,12 @@ async function main() {
   const idx = buildIndex(passages);
   const patience = search(idx, ['patience', 'patient', 'steadfast', 'prayer'], 8).map((p) => p.tag);
   const sleep = search(idx, ['sleep', 'bed', 'lie down', 'night'], 8);
-  const cleaned = cleanAnswer('Be patient [Q 2:153] and pray [Q 99:99]. <b>Also</b> [D 999].', ['Q 2:153', 'D 5']);
+  const cleaned = cleanAnswer('Be patient [Q 2:153] and pray [Q 99:99]. <b>Also</b> [D 999].\n* Say it 【D 5】 **daily**', ['Q 2:153', 'D 5']);
   const promptsSame = readFileSync(join(root, 'src/features/ask/prompts.ts'), 'utf8') === readFileSync(join(root, 'supabase/functions/ask/prompts.ts'), 'utf8');
   rewardChecks.push(
     ['ask: "patience" finds Al-Baqarah 2:153 or 2:45', patience.includes('Q 2:153') || patience.includes('Q 2:45')],
     ['ask: "sleep" finds a dua for going to sleep', sleep.some((p) => p.kind === 'dua' && /sleep/i.test(p.chapter ?? ''))],
-    ['ask: citations not given to the model are removed', cleaned.cited.join() === 'Q 2:153' && cleaned.dropped === 2 && !cleaned.text.includes('<b>')],
+    ['ask: citations not given to the model are removed; odd brackets and markdown cleaned', cleaned.cited.join() === 'Q 2:153,D 5' && cleaned.dropped === 2 && !/<b>|\*|【/.test(cleaned.text) && cleaned.text.includes('• Say it [D 5] daily')],
     ['ask: server prompts are identical to the app’s', promptsSame],
   );
 
