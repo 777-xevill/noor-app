@@ -376,6 +376,12 @@ HADITH = [
         "bn": ("যে লোক তার ভাইয়ের", "তোমার জন্যও অনুরূপ।"),
     },
     {
+        "id": "charity", "n": 6592, "ref": "Sahih Muslim 2588",
+        "ar": ("مَا نَقَصَتْ صَدَقَةٌ", "رَفَعَهُ اللَّهُ"),
+        "en": ("Charity does not decrease wealth", "raises his status"),
+        "bn": ("সদাকাহ করাতে", "সমুন্নত করে দেন।"),
+    },
+    {
         "id": "ashura", "n": 2747, "ref": "Sahih Muslim 1162",
         "en": ("He was asked about fasting on the day of 'Ashura", "the preceding year."),
         "bn": ("অতঃপর আশুরার", "হয়ে যাবে।"),

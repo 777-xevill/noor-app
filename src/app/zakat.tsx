@@ -1,4 +1,5 @@
 import { ScrollView, TextInput, View } from 'react-native';
+import { router } from 'expo-router';
 import { Chip } from '@/components/Chip';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
@@ -8,6 +9,9 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
 import { Txt } from '@/components/Txt';
 import { computeZakat, GRAMS_PER_TOLA, NISAB_GRAMS, useZakat, type ZakatInputs } from '@/features/zakat/store';
+import { hijriYearRange } from '@/features/donate/period';
+import { totalGiven, useGiving } from '@/features/donate/store';
+import { useSchedule } from '@/features/prayer/useSchedule';
 import { fonts } from '@/theme/fonts';
 import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
@@ -51,6 +55,10 @@ export default function ZakatScreen() {
   const L = useT();
   const z = useZakat();
   const r = computeZakat(z);
+  const gifts = useGiving((g) => g.gifts);
+  const { schedule, hijriOffset } = useSchedule(60_000);
+  const year = hijriYearRange(schedule.day, hijriOffset);
+  const paid = totalGiven(gifts, 'zakat', z.currency, year.from, year.to);
   const unitLabel = L.t(z.unit === 'tola' ? 'zakat.unit.tola' : 'zakat.unit.gram');
   const metal = L.t(z.basis === 'gold' ? 'zakat.metal.gold' : 'zakat.metal.silver');
   const money = (v: number) => `${z.currency} ${L.num(v.toLocaleString('en-US', { maximumFractionDigits: 2 }))}`;
@@ -144,6 +152,15 @@ export default function ZakatScreen() {
               ? L.t('zakat.above')
               : L.t('zakat.below')}
         </Txt>
+        <Press onPress={() => router.push('/donate')} accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 4 }}>
+          <Txt variant="bodyStrong" style={{ flex: 1 }} tabular>
+            {L.t('zakat.paidThisYear', { amount: money(paid), year: L.num(year.year) })}
+          </Txt>
+          <Txt variant="caption" tone="soft">
+            {L.t('zakat.recordPayment')}
+          </Txt>
+          <Icon name="chevronRight" size={14} color={t.textMuted} />
+        </Press>
         {(r.missingGoldPrice || r.missingSilverPrice) && (
           <Txt variant="caption" tone="soft">
             {L.t('zakat.missingPrice', { metal: L.t(r.missingGoldPrice ? 'zakat.metal.gold' : 'zakat.metal.silver') })}

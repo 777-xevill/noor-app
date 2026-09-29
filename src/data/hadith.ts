@@ -2,7 +2,7 @@
 // Source: Sahih Muslim via github.com/fawazahmed0/hadith-api — Arabic; English, Abdul Hamid Siddiqui;
 // Bangla, Islamic Foundation Bangladesh. Excerpts are cut from the source text at fixed anchors.
 
-export type HadithId = 'consistency' | 'shawwal' | 'arafah' | 'absent' | 'ashura';
+export type HadithId = 'consistency' | 'shawwal' | 'arafah' | 'absent' | 'charity' | 'ashura';
 export type Hadith = { id: HadithId; ref: string; ar?: string; en: string; bn: string };
 
 export const HADITH: Hadith[] = [
@@ -32,6 +32,13 @@ export const HADITH: Hadith[] = [
   "ar": "مَنْ دَعَا لأَخِيهِ بِظَهْرِ الْغَيْبِ قَالَ الْمَلَكُ الْمُوَكَّلُ بِهِ آمِينَ وَلَكَ بِمِثْلٍ",
   "en": "He who supplicates for his brother behind his back (in his absence), the Angel commissioned (for carrying supplication to his Lord) says: Amen, and it is for you also",
   "bn": "যে লোক তার ভাইয়ের অনুপস্থিতিতে তার জন্য দু’আ করে, তার জন্য একজন নিয়োজিত ফেরেশতা 'আমীন' বলতে থাকে আর বলে, তোমার জন্যও অনুরূপ।"
+ },
+ {
+  "id": "charity",
+  "ref": "Sahih Muslim 2588",
+  "ar": "مَا نَقَصَتْ صَدَقَةٌ مِنْ مَالٍ وَمَا زَادَ اللَّهُ عَبْدًا بِعَفْوٍ إِلاَّ عِزًّا وَمَا تَوَاضَعَ أَحَدٌ لِلَّهِ إِلاَّ رَفَعَهُ اللَّهُ",
+  "en": "Charity does not decrease wealth, no one forgives another except that Allah increases his honor, and no one humbles himself for the sake of Allah except that Allah raises his status",
+  "bn": "সদাকাহ করাতে সম্পদের হ্রাস হয় না। যে ব্যক্তি ক্ষমা করে আল্লাহ তার মর্যাদা বাড়িয়ে দেন। আর কেউ আল্লাহর সম্ভষ্টি লাভে বিনীত হলে তিনি তার মর্যাদা সমুন্নত করে দেন।"
  },
  {
   "id": "ashura",

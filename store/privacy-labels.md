@@ -10,9 +10,11 @@ off the phone.
 | Email address | Only if the person signs in | Supabase (auth) | Sign-in |
 | Prayer log, Quran progress and bookmarks, journal, fasts, dhikr counts, saved duas, Ramadan plan, milestones, settings | Only if signed in | Supabase (`user_data`, row-level security) | Sync and backup |
 | Purchase history and an anonymous app user ID | Only when buying or restoring Plus | RevenueCat, Apple or Google | Noor Plus |
+| A dua request (and optional first name) | Only if the person posts one | Supabase (`dua_requests`, author never exposed) | Community |
+| A question to Ask Noor, with the passages found for it | Only when asking | Supabase edge function → Groq | Ask Noor |
 | Which verse is playing | When recitation is played | everyayah.com (audio file request) | Recitation |
 
-**Never leaves the phone:** location (used on-device for prayer times and Qibla), Zakat figures,
+**Never leaves the phone:** location (used on-device for prayer times and Qibla), Zakat figures, the giving log,
 and everything else when signed out. There are no ads, analytics or tracking SDKs, and no data is
 sold or shared for advertising.
 

@@ -2,7 +2,7 @@
 // implementation (api.aladhan.com). Run: npx tsx scripts/verify/verify-religious.ts
 import { Coordinates, Qibla } from 'adhan';
 import { CITIES } from '../../src/data/cities';
-import { addDays, type DayParts, dayKey, formatClock, wallDay } from '../../src/lib/dates';
+import { addDays, type DayParts, dayKey, formatClock, fromDayKey as fromKey, wallDay } from '../../src/lib/dates';
 import { toHijri } from '../../src/lib/hijri';
 import { bearingDeg, distanceKm, KAABA } from '../../src/lib/geo';
 import { toPlaces } from '../../src/features/places/overpass';
@@ -11,6 +11,8 @@ import { buildQuiz } from '../../src/features/learn/quiz';
 import { checkRequest } from '../../src/features/community/rules';
 import { buildIndex, type Passage, search } from '../../src/features/ask/search';
 import { cleanAnswer } from '../../src/features/ask/prompts';
+import { hijriYearRange } from '../../src/features/donate/period';
+import { totalGiven } from '../../src/features/donate/store';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
@@ -340,10 +342,23 @@ async function main() {
     ['ask: server prompts are identical to the app’s', promptsSame],
   );
 
+  // Giving: the Zakat year is the Hijri year, and totals count only that year, kind and currency.
+  const hy = hijriYearRange({ y: 2026, m: 8, d: 29 }, 0);
+  const giftsLog = [
+    { id: '1', kind: 'zakat' as const, amount: 500, currency: 'BDT', day: '2026-07-01' },
+    { id: '2', kind: 'zakat' as const, amount: 300, currency: 'BDT', day: '2026-06-10' },
+    { id: '3', kind: 'sadaqah' as const, amount: 50, currency: 'BDT', day: '2026-07-02' },
+    { id: '4', kind: 'zakat' as const, amount: 20, currency: 'USD', day: '2026-07-03' },
+  ];
+  rewardChecks.push(
+    [`giving: Hijri year 1448 runs ${hy.from} to ${hy.to}`, hy.year === 1448 && hy.from === '2026-06-16' && toHijri(fromKey(hy.to)).year === 1448 && toHijri(addDays(fromKey(hy.to), 1)).year === 1449],
+    ['giving: Zakat paid this year counts only this year, kind and currency', totalGiven(giftsLog, 'zakat', 'BDT', hy.from, hy.to) === 500],
+  );
+
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community|ask)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community|ask|giving)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

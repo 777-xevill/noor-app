@@ -19,6 +19,7 @@ import { useQuranProgress } from '@/features/quran/progress';
 import { useSettings } from '@/features/settings/store';
 import { startBilling } from '@/features/premium/billing';
 import { usePlusStore } from '@/features/premium/store';
+import { useGiving } from '@/features/donate/store';
 import { startCloudSync } from '@/features/sync/engine';
 import { useSyncMeta } from '@/features/sync/store';
 import { syncWidgets } from '@/features/widget/sync';
@@ -31,7 +32,7 @@ function useStoresReady() {
   useEffect(() => {
     // Every persisted store must be loaded before the first screen renders, so nothing flashes empty
     // and no early write can overwrite saved data.
-    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta, usePlusStore].map(whenHydrated)).then(() => {
+    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta, usePlusStore, useGiving].map(whenHydrated)).then(() => {
       seedDemoData();
       setReady(true);
     });
