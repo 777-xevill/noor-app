@@ -8,6 +8,7 @@ import { bearingDeg, distanceKm, KAABA } from '../../src/lib/geo';
 import { toPlaces } from '../../src/features/places/overpass';
 import { WBW } from '../../src/data/wbw';
 import { buildQuiz } from '../../src/features/learn/quiz';
+import { checkRequest } from '../../src/features/community/rules';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
@@ -305,10 +306,21 @@ async function main() {
   );
   rewardChecks.push(['lessons: every quiz question has one right answer among four distinct options', quizOk]);
 
+  // Dua requests: the posting rules catch links and phone numbers (Latin or Bangla digits).
+  const ruleCases: [string, string | null][] = [
+    ['Please make dua for my mother’s health', null],
+    ['আমার বাবার সুস্থতার জন্য দোয়া করবেন', null],
+    ['visit www.example.com for dua', 'links'],
+    ['call me 01712-345678', 'phone'],
+    ['ফোন ০১৭১২৩৪৫৬৭৮', 'phone'],
+    ['hi', 'short'],
+  ];
+  rewardChecks.push(['community: posting rules catch links, phone numbers and too-short requests', ruleCases.every(([text, want]) => checkRequest(text) === want)]);
+
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

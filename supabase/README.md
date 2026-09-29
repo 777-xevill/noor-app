@@ -57,3 +57,17 @@ are true:
 
 Row-level security enforces both. Quote the Quran and hadith exactly as a named source gives them,
 and list the sources in `sources` as `[{ "title": "Sahih al-Bukhari 1", "url": "https://…" }]`.
+
+## Dua requests (optional)
+
+Run `migrations/0003_community.sql`. The app reads the `dua_feed` view and writes only through
+checked functions, so nobody can see who wrote an anonymous request.
+
+**Moderation.** Three reports hide a request automatically. To review one:
+
+1. In Studio, open `dua_reports` joined with `dua_requests`.
+2. To restore a request, set `hidden = false` and `report_count = 0`.
+3. To remove it, delete the row. For repeated abuse, delete the user from Authentication.
+
+Apple and Google require this reporting, blocking and removal for apps with user posts. The
+community rules are in `site/terms.html`.

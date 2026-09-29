@@ -12,22 +12,14 @@ import { Sheet } from '@/components/Sheet';
 import { Txt } from '@/components/Txt';
 import { useNow } from '@/lib/useNow';
 import { accountsEnabled } from '@/lib/supabase';
-import { type I18n, useT } from '@/i18n';
+import { timeAgo } from '@/lib/timeAgo';
+import { useT } from '@/i18n';
 import { deleteAccount, sendCode, signOut, syncNow, type SyncResult, verifyCode } from '@/features/sync/engine';
 import { useSyncMeta } from '@/features/sync/store';
 import { useAccount } from '@/features/sync/useAccount';
 import { useTheme } from '@/theme/useTheme';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function ago(L: I18n, then: number, now: number) {
-  const min = Math.floor((now - then) / 60_000);
-  if (min < 1) return L.t('account.justNow');
-  if (min < 60) return L.t('account.minAgo', { n: min });
-  if (min < 24 * 60) return L.t('account.hAgo', { n: Math.floor(min / 60) });
-  const d = new Date(then);
-  return L.shortDate({ y: d.getFullYear(), m: d.getMonth(), d: d.getDate() });
-}
 
 function Button({ label, onPress, busy, disabled, icon, quiet }: { label: string; onPress: () => void; busy?: boolean; disabled?: boolean; icon?: IconName; quiet?: boolean }) {
   const t = useTheme();
@@ -151,7 +143,7 @@ function SignedIn({ email }: { email: string }) {
   const [deleteError, setDeleteError] = useState(false);
 
   const status =
-    state === 'busy' ? L.t('account.syncing') : state === 'failed' ? L.t('account.syncFailed') : lastSync ? L.t('account.lastSync', { when: ago(L, lastSync, now) }) : L.t('account.never');
+    state === 'busy' ? L.t('account.syncing') : state === 'failed' ? L.t('account.syncFailed') : lastSync ? L.t('account.lastSync', { when: timeAgo(L, lastSync, now) }) : L.t('account.never');
 
   return (
     <>

@@ -2,7 +2,7 @@
 // Source: Sahih Muslim via github.com/fawazahmed0/hadith-api — Arabic; English, Abdul Hamid Siddiqui;
 // Bangla, Islamic Foundation Bangladesh. Excerpts are cut from the source text at fixed anchors.
 
-export type HadithId = 'consistency' | 'shawwal' | 'arafah' | 'ashura';
+export type HadithId = 'consistency' | 'shawwal' | 'arafah' | 'absent' | 'ashura';
 export type Hadith = { id: HadithId; ref: string; ar?: string; en: string; bn: string };
 
 export const HADITH: Hadith[] = [
@@ -25,6 +25,13 @@ export const HADITH: Hadith[] = [
   "ref": "Sahih Muslim 1162",
   "en": "He was asked about fasting on the day of ‘Arafa, whereupon he said: It expiates the sins of the preceding year and the coming year.",
   "bn": "অতঃপর আরাফাহ দিবসের সওম সম্পর্কে জিজ্ঞেস করা হলে তিনি বললেন, তাতে পূর্ববর্তী বছর ও পরবর্তী বছরের গুনাহের কাফফারাহ হয়ে যাবে।"
+ },
+ {
+  "id": "absent",
+  "ref": "Sahih Muslim 2732",
+  "ar": "مَنْ دَعَا لأَخِيهِ بِظَهْرِ الْغَيْبِ قَالَ الْمَلَكُ الْمُوَكَّلُ بِهِ آمِينَ وَلَكَ بِمِثْلٍ",
+  "en": "He who supplicates for his brother behind his back (in his absence), the Angel commissioned (for carrying supplication to his Lord) says: Amen, and it is for you also",
+  "bn": "যে লোক তার ভাইয়ের অনুপস্থিতিতে তার জন্য দু’আ করে, তার জন্য একজন নিয়োজিত ফেরেশতা 'আমীন' বলতে থাকে আর বলে, তোমার জন্যও অনুরূপ।"
  },
  {
   "id": "ashura",
