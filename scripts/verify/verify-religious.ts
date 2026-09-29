@@ -4,7 +4,8 @@ import { Coordinates, Qibla } from 'adhan';
 import { CITIES } from '../../src/data/cities';
 import { addDays, type DayParts, dayKey, formatClock, wallDay } from '../../src/lib/dates';
 import { toHijri } from '../../src/lib/hijri';
-import { distanceKm } from '../../src/lib/geo';
+import { bearingDeg, distanceKm, KAABA } from '../../src/lib/geo';
+import { toPlaces } from '../../src/features/places/overpass';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
@@ -259,10 +260,27 @@ async function main() {
     ['sync: a fast recorded on this phone wins', m.fasts['2026-09-28'] === 'fasted'],
   ];
   rewardChecks.push(...syncChecks);
+
+  // Nearby places: directions use the same great-circle bearing as the Qibla, and duplicates collapse.
+  const dhakaQibla = Qibla(new Coordinates(dhaka.lat, dhaka.lng));
+  const placeList = toPlaces(
+    'mosque',
+    [
+      { type: 'node', id: 1, lat: dhaka.lat + 0.01, lon: dhaka.lng },
+      { type: 'node', id: 1, lat: dhaka.lat + 0.01, lon: dhaka.lng },
+      { type: 'way', id: 2, center: { lat: dhaka.lat, lon: dhaka.lng + 0.001 } },
+    ],
+    dhaka.lat,
+    dhaka.lng,
+  );
+  rewardChecks.push(
+    ['places: bearing to the Kaaba matches the Qibla', Math.abs(bearingDeg(dhaka.lat, dhaka.lng, KAABA.lat, KAABA.lng) - dhakaQibla) < 0.05],
+    ['places: nearest first, duplicates removed, north is 0°', placeList.length === 2 && placeList[0].id === 'way/2' && Math.round(placeList[1].bearing) === 0],
+  );
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);
