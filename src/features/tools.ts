@@ -34,6 +34,7 @@ const T = {
   mosques: tool('mosques', 'map', '/mosques'),
   learn: tool('learn', 'library', '/learn'),
   community: tool('community', 'dua', '/community'),
+  ask: tool('ask', 'sparkles', '/ask'),
   account: tool('account', 'cloud', '/settings/account'),
 };
 
@@ -44,7 +45,7 @@ export const CORE_TOOLS: Tool[] = [T.qibla, T.quran, T.duas, T.tasbih, T.journal
 export const TOOL_GROUPS: { title: Key; tools: Tool[] }[] = [
   { title: 'group.worship', tools: [T.prayers, T.timetable, T.quran, T.qibla, T.mosques, T.duas, T.tasbih, T.ramadan] },
   { title: 'group.track', tools: [T.journal, T.tracker, T.milestones, T.calendar] },
-  { title: 'group.community', tools: [T.community] },
+  { title: 'group.community', tools: [T.ask, T.community] },
   { title: 'group.learn', tools: [T.learn, T.names, T.shahadah, T.greetings] },
   { title: 'group.more', tools: [T.zakat, T.cards, T.account, T.settings] },
 ];

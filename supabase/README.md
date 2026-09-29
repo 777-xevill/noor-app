@@ -71,3 +71,24 @@ checked functions, so nobody can see who wrote an anonymous request.
 
 Apple and Google require this reporting, blocking and removal for apps with user posts. The
 community rules are in `site/terms.html`.
+
+## Ask Noor (Groq, free tier)
+
+1. Create a key at console.groq.com. The free tier is enough to start.
+2. Run `migrations/0004_ask.sql`, which sets a limit of 30 questions per user per day.
+3. Set the key as a secret and deploy the function:
+   `supabase secrets set GROQ_API_KEY=... && supabase functions deploy ask`
+   Optionally set `GROQ_MODEL`. The default is `openai/gpt-oss-120b`.
+
+**How it stays grounded:**
+1. The model first turns the question into English search words.
+2. The app searches its own verified Quran and Hisnul Muslim texts.
+3. The model answers from only those passages and must cite them, for example `[Q 2:153]`.
+4. The app removes any citation it didn't provide.
+5. Sources are always shown from the app's own text, never the model's wording.
+
+Keep `functions/ask/prompts.ts` identical to `src/features/ask/prompts.ts`. `npm run verify`
+checks this.
+
+For quick testing without Supabase, set `EXPO_PUBLIC_GROQ_API_KEY` in `.env.local`. Never ship
+a build with it, because the key can be read out of the app.

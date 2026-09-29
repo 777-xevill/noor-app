@@ -9,6 +9,8 @@ import { toPlaces } from '../../src/features/places/overpass';
 import { WBW } from '../../src/data/wbw';
 import { buildQuiz } from '../../src/features/learn/quiz';
 import { checkRequest } from '../../src/features/community/rules';
+import { buildIndex, type Passage, search } from '../../src/features/ask/search';
+import { cleanAnswer } from '../../src/features/ask/prompts';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GREETINGS, SHAHADAH } from '../../src/data/phrases';
@@ -317,10 +319,31 @@ async function main() {
   ];
   rewardChecks.push(['community: posting rules catch links, phone numbers and too-short requests', ruleCases.every(([text, want]) => checkRequest(text) === want)]);
 
+  // Ask Noor: retrieval finds the right texts, invented citations are removed, and the prompts that
+  // run on the server are the ones reviewed here.
+  const passages: Passage[] = [];
+  for (let n = 1; n <= 114; n++) {
+    const sura = JSON.parse(readFileSync(join(root, `assets/data/quran/${n}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string; en: string; bn: string }[] };
+    for (const a of sura.ayahs) passages.push({ tag: `Q ${n}:${a.n}`, kind: 'quran', ar: a.ar, en: a.en, bn: a.bn, surah: n, ayah: a.n });
+  }
+  const duaBook = JSON.parse(readFileSync(join(root, 'assets/data/duas.qdata'), 'utf8')) as { title: string; duas: { id: number; ar: string; en: string }[] }[];
+  for (const c of duaBook) for (const d of c.duas) passages.push({ tag: `D ${d.id}`, kind: 'dua', ar: d.ar, en: d.en, chapter: c.title });
+  const idx = buildIndex(passages);
+  const patience = search(idx, ['patience', 'patient', 'steadfast', 'prayer'], 8).map((p) => p.tag);
+  const sleep = search(idx, ['sleep', 'bed', 'lie down', 'night'], 8);
+  const cleaned = cleanAnswer('Be patient [Q 2:153] and pray [Q 99:99]. <b>Also</b> [D 999].', ['Q 2:153', 'D 5']);
+  const promptsSame = readFileSync(join(root, 'src/features/ask/prompts.ts'), 'utf8') === readFileSync(join(root, 'supabase/functions/ask/prompts.ts'), 'utf8');
+  rewardChecks.push(
+    ['ask: "patience" finds Al-Baqarah 2:153 or 2:45', patience.includes('Q 2:153') || patience.includes('Q 2:45')],
+    ['ask: "sleep" finds a dua for going to sleep', sleep.some((p) => p.kind === 'dua' && /sleep/i.test(p.chapter ?? ''))],
+    ['ask: citations not given to the model are removed', cleaned.cited.join() === 'Q 2:153' && cleaned.dropped === 2 && !cleaned.text.includes('<b>')],
+    ['ask: server prompts are identical to the app’s', promptsSame],
+  );
+
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community|ask)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);
