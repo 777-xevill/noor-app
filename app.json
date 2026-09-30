@@ -23,7 +23,12 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.xevill.noor",
       "permissions": [
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
@@ -123,12 +128,37 @@
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
         }
-      ]
+      ],
+      "./plugins/withWorkManagerFix"
     ],
     "scheme": "noor",
     "experiments": {
       "typedRoutes": true,
       "tsconfigPaths": true
+    },
+    "owner": "777_xevill",
+    "extra": {
+      "router": {},
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "ExpoWidgetsTarget",
+                  "bundleIdentifier": "com.xevill.noor.widgets",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.xevill.noor"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "869f881f-2881-452c-9a2e-98c9d1870bfb"
+      }
     }
   }
 }
