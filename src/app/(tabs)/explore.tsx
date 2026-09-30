@@ -1,18 +1,19 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Field } from '@/components/Field';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
-import { Press } from '@/components/Press';
+import { PressLite as Press } from '@/components/Press';
 import { Reveal } from '@/components/Reveal';
 import { Screen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { type Tool, TOOL_GROUPS } from '@/features/tools';
+import { useProgressive } from '@/lib/useProgressive';
 import { useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
-function ToolCard({ tool }: { tool: Tool }) {
+const ToolCard = memo(function ToolCard({ tool }: { tool: Tool }) {
   const t = useTheme();
   const L = useT();
   return (
@@ -30,7 +31,7 @@ function ToolCard({ tool }: { tool: Tool }) {
       </Glass>
     </Press>
   );
-}
+});
 
 export default function ExploreScreen() {
   const L = useT();
@@ -40,6 +41,8 @@ export default function ExploreScreen() {
     if (!q) return TOOL_GROUPS;
     return TOOL_GROUPS.map((g) => ({ ...g, tools: g.tools.filter((x) => `${L.t(x.label)} ${L.t(x.blurb)} ${x.key}`.toLowerCase().includes(q)) })).filter((g) => g.tools.length);
   }, [query, L]);
+
+  const shownGroups = useProgressive(groups.length, 2, 1);
 
   return (
     <Screen tabs gap={18}>
@@ -51,7 +54,7 @@ export default function ExploreScreen() {
       <Reveal index={1}>
         <Field icon="search" placeholder={L.t('explore.find')} value={query} onChangeText={setQuery} autoCorrect={false} />
       </Reveal>
-      {groups.map((g, gi) => (
+      {groups.slice(0, shownGroups).map((g, gi) => (
         <Reveal key={g.title} index={gi + 2}>
           <View style={{ gap: 10 }}>
             <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 4 }}>

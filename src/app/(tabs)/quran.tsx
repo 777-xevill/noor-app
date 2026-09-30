@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Field } from '@/components/Field';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
-import { Press } from '@/components/Press';
+import { PressLite as Press } from '@/components/Press';
 import { ProgressRing } from '@/components/ProgressRing';
 import { Reveal } from '@/components/Reveal';
 import { Screen } from '@/components/Screen';
@@ -13,6 +13,7 @@ import { Txt } from '@/components/Txt';
 import { JUZ_STARTS } from '@/data/juz';
 import { SURAHS, type SurahMeta } from '@/data/surahs';
 import { dayKey } from '@/lib/dates';
+import { useProgressive } from '@/lib/useProgressive';
 import { ContinueReading } from '@/features/home/ContinueReading';
 import { useSchedule } from '@/features/prayer/useSchedule';
 import { useQuranProgress } from '@/features/quran/progress';
@@ -52,7 +53,7 @@ function NumberBadge({ n }: { n: number }) {
   );
 }
 
-function SurahRow({ s }: { s: SurahMeta }) {
+const SurahRow = memo(function SurahRow({ s }: { s: SurahMeta }) {
   const t = useTheme();
   const L = useT();
   return (
@@ -70,6 +71,18 @@ function SurahRow({ s }: { s: SurahMeta }) {
         </Txt>
       </View>
     </Press>
+  );
+});
+
+/** The surah rows, drawn in batches so the tab opens at once. */
+function SurahList({ surahs }: { surahs: SurahMeta[] }) {
+  const shown = useProgressive(surahs.length);
+  return (
+    <>
+      {surahs.slice(0, shown).map((s) => (
+        <SurahRow key={s.n} s={s} />
+      ))}
+    </>
   );
 }
 
@@ -138,9 +151,7 @@ export default function QuranScreen() {
           <View style={{ gap: 8 }}>
             <Field icon="search" placeholder={L.t('quran.searchPh')} value={query} onChangeText={setQuery} autoCorrect={false} />
             <Glass radius={24} padding={0} style={{ paddingHorizontal: 14 }}>
-              {surahs.map((s) => (
-                <SurahRow key={s.n} s={s} />
-              ))}
+              <SurahList surahs={surahs} />
               {surahs.length === 0 && (
                 <Txt variant="body" tone="muted" style={{ paddingVertical: 24, textAlign: 'center' }}>
                   {L.t('quran.noMatch', { q: query })}

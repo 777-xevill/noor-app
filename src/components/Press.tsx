@@ -33,3 +33,16 @@ export function Press({ style, scaleTo = 0.96, onPressIn, onPressOut, ...rest }:
     />
   );
 }
+
+/**
+ * A press feedback without any animation machinery, for long lists and grids where dozens of animated
+ * buttons at once make a screen slow to open. It sinks slightly while held, like Press, but instantly.
+ */
+export function PressLite({ style, scaleTo = 0.97, ...rest }: Props) {
+  return (
+    <Pressable
+      {...rest}
+      style={({ pressed }) => [style, pressed ? { transform: [{ scale: scaleTo }], opacity: 0.85 } : null]}
+    />
+  );
+}
