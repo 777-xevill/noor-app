@@ -1,4 +1,4 @@
-import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { spring, timing } from '@/theme/motion';
 
@@ -14,7 +14,13 @@ type Props = Omit<PressableProps, 'style'> & {
  * The app's one press behaviour: a quick ease-in as the finger lands, then a soft spring back
  * on release, so every button feels physically connected to the touch.
  */
-export function Press({ style, scaleTo = 0.96, onPressIn, onPressOut, ...rest }: Props) {
+export function Press(props: Props) {
+  // On Android every animated button is one more view Reanimated has to track; screens hold dozens,
+  // and budget phones felt it on every tab switch. There the press feedback is instant instead.
+  return Platform.OS === 'android' ? <PressLite {...props} /> : <PressAnimated {...props} />;
+}
+
+function PressAnimated({ style, scaleTo = 0.96, onPressIn, onPressOut, ...rest }: Props) {
   const scale = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 

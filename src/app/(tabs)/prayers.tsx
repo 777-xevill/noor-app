@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Chip } from '@/components/Chip';
 import { Glass } from '@/components/Glass';
-import { Icon, type IconName } from '@/components/Icon';
+import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { ListGroup, ListRow } from '@/components/ListRow';
 import { Press } from '@/components/Press';
@@ -14,19 +14,15 @@ import { Txt } from '@/components/Txt';
 import { addDays, dayKey, daysBetween, sameDay } from '@/lib/dates';
 import { toHijri } from '@/lib/hijri';
 import { useT } from '@/i18n';
-import type { Key } from '@/i18n/en';
 import { usePrayerLog } from '@/features/prayer/log';
 import { PRAYER_ICON } from '@/features/prayer/PrayerIcon';
 import { PRAYERS, prayerTimesFor, type PrayerKey } from '@/features/prayer/times';
+import { ALERT_ICON, ALERT_LABEL, NEXT_ALERT } from '@/features/prayer/alertCycle';
 import { useSchedule } from '@/features/prayer/useSchedule';
-import { type AlertKind, useSettings } from '@/features/settings/store';
+import { useSettings } from '@/features/settings/store';
 import { useTheme } from '@/theme/useTheme';
 
 const EMPTY: PrayerKey[] = [];
-// Tapping the bell steps through: adhan → sound → silent → off.
-const NEXT_ALERT: Record<AlertKind, AlertKind> = { adhan: 'sound', sound: 'silent', silent: 'off', off: 'adhan' };
-const ALERT_ICON: Record<AlertKind, IconName> = { adhan: 'volume', sound: 'bellRing', silent: 'bell', off: 'bellOff' };
-const ALERT_LABEL: Record<AlertKind, Key> = { adhan: 'alert.adhan', sound: 'alert.sound', silent: 'alert.silent', off: 'alert.off' };
 
 export default function PrayersScreen() {
   const t = useTheme();

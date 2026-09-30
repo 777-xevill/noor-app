@@ -19,25 +19,17 @@ function nearestCity(lat: number, lng: number) {
 }
 
 /** `code` lets each screen explain the problem in the user's language. */
+/** Moving less than this doesn't change prayer times by even a minute. */
+const MOVE_KM = 3;
+
 export class LocationError extends Error {
   constructor(public code: 'denied' | 'unavailable') {
     super(code);
   }
 }
 
-/** Ask for permission, read the device position and describe it as a prayer location. */
-export async function locateDevice(fallbackName = 'Current location'): Promise<PrayerLocation> {
-  const perm = await Location.requestForegroundPermissionsAsync();
-  if (!perm.granted) throw new LocationError('denied');
-
-  let pos: Location.LocationObject | null = null;
-  try {
-    pos = (await Location.getLastKnownPositionAsync({ maxAge: 30 * 60_000 })) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
-  } catch {
-    throw new LocationError('unavailable');
-  }
-  const { latitude, longitude } = pos.coords;
-
+/** Name a position (city, country) and describe it as a prayer location. */
+async function describe(latitude: number, longitude: number, fallbackName: string): Promise<PrayerLocation> {
   let city = '';
   let country = '';
   let cc = '';
@@ -67,4 +59,41 @@ export async function locateDevice(fallbackName = 'Current location'): Promise<P
     timeZone: deviceTimeZone(),
     source: 'gps',
   };
+}
+
+async function readPosition(maxAgeMs: number): Promise<Location.LocationObject> {
+  try {
+    const last = await Location.getLastKnownPositionAsync({ maxAge: maxAgeMs });
+    if (last) return last;
+    // A fresh fix can take a while indoors; don't wait forever.
+    return await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 20_000)),
+    ]);
+  } catch {
+    throw new LocationError('unavailable');
+  }
+}
+
+/** Ask for permission, read the device position and describe it as a prayer location. */
+export async function locateDevice(fallbackName = 'Current location'): Promise<PrayerLocation> {
+  const perm = await Location.requestForegroundPermissionsAsync();
+  if (!perm.granted) throw new LocationError('denied');
+  const pos = await readPosition(30 * 60_000);
+  return describe(pos.coords.latitude, pos.coords.longitude, fallbackName);
+}
+
+/**
+ * Where the phone is now, without asking for permission (null when permission hasn't been given or
+ * no fix is available). Only names the place when it moved from `from` or the time zone changed.
+ */
+export async function currentDeviceLocation(from: PrayerLocation, fallbackName: string): Promise<PrayerLocation | null> {
+  const perm = await Location.getForegroundPermissionsAsync();
+  if (!perm.granted) return null;
+  const pos = await readPosition(10 * 60_000).catch(() => null);
+  if (!pos) return null;
+  const { latitude, longitude } = pos.coords;
+  const moved = distanceKm(latitude, longitude, from.latitude, from.longitude) >= MOVE_KM;
+  if (!moved && from.timeZone === deviceTimeZone() && from.source === 'gps') return null;
+  return describe(latitude, longitude, fallbackName);
 }

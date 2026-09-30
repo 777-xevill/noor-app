@@ -20,14 +20,15 @@ export function Txt({ variant = 'body', tone = 'default', color, tabular, style,
   const toneColor = { default: t.text, soft: t.textSoft, muted: t.textMuted, onInk: t.onInk }[tone];
   const base = [type[variant], { color: color ?? toneColor }, tabular && { fontVariant: ['tabular-nums' as const] }, style];
   if (!bangla) return <Text {...rest} style={base} />;
-  // Bangla: swap the Latin UI face for the matching Bangla weight and relax tight tracking.
+  // Bangla: swap the Latin UI face for the matching Bangla weight, and drop letter spacing either way
+  // (tight tracking crowds conjuncts; wide tracking pulls a word's letters apart).
   // Arabic faces (Amiri) are left untouched.
   const flat: TextStyle = StyleSheet.flatten(base);
   const family = flat.fontFamily && BANGLA_FAMILY[flat.fontFamily];
   return (
     <Text
       {...rest}
-      style={family ? [flat, { fontFamily: family, letterSpacing: Math.max(0, flat.letterSpacing ?? 0), lineHeight: flat.lineHeight ? flat.lineHeight * 1.12 : undefined }] : flat}
+      style={family ? [flat, { fontFamily: family, letterSpacing: 0, lineHeight: flat.lineHeight ? flat.lineHeight * 1.12 : undefined }] : flat}
     />
   );
 }

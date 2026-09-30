@@ -144,16 +144,31 @@ export function startCloudSync(): () => void {
 
 // ——— Account actions ———
 
-export async function sendCode(email: string) {
-  if (!supabase) throw new Error('accounts off');
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-  if (error) throw error;
+export type AuthError = 'email' | 'password' | 'exists' | 'wrong' | 'limit' | 'network';
+
+export class AccountError extends Error {
+  constructor(public code: AuthError) {
+    super(code);
+  }
 }
 
-export async function verifyCode(email: string, token: string) {
-  if (!supabase) throw new Error('accounts off');
-  const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-  if (error) throw error;
+/** Sign in with email and password. */
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabase) throw new AccountError('network');
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+  if (error) throw new AccountError(error.status === 400 ? 'wrong' : error.status === 429 ? 'limit' : 'network');
+}
+
+/**
+ * Create an account and sign in. The account is made by the database function `create_account`
+ * (migration 0007), which doesn't need a confirmation email to be delivered.
+ */
+export async function createAccount(email: string, password: string) {
+  if (!supabase) throw new AccountError('network');
+  const { data, error } = await supabase.rpc('create_account', { email: email.trim().toLowerCase(), password });
+  if (error) throw new AccountError('network');
+  if (data !== 'ok') throw new AccountError(data === 'exists' || data === 'email' || data === 'password' || data === 'limit' ? data : 'network');
+  await signInWithPassword(email, password);
 }
 
 /** Sign out; everything stays on this phone. */

@@ -1,44 +1,35 @@
 import { View } from 'react-native';
+import { router } from 'expo-router';
+import { Avatar } from '@/components/Avatar';
+import { Press } from '@/components/Press';
 import { Chip } from '@/components/Chip';
-import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Txt } from '@/components/Txt';
 import { toHijri } from '@/lib/hijri';
 import { useT } from '@/i18n';
 import { useSchedule } from '@/features/prayer/useSchedule';
+import { useRewards } from '@/features/rewards/store';
 import { useSettings } from '@/features/settings/store';
-import { useTheme } from '@/theme/useTheme';
 
 export function HomeHeader() {
-  const t = useTheme();
   const L = useT();
   const name = useSettings((s) => s.displayName);
   const { schedule, hijriOffset } = useSchedule(60_000);
   const { day } = schedule;
+  // The dot shows until the notifications page has been opened today, or while a milestone is unseen.
+  const seenAt = useSettings((s) => s.notificationsSeenAt);
+  const unseen = useRewards((s) => s.unseen.length);
+  const startOfToday = new Date(day.y, day.m, day.d).getTime();
+  const hasNews = unseen > 0 || seenAt < startOfToday;
 
   return (
     <View style={{ gap: 18 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 }}>
-          <View
-            style={{
-              width: 46,
-              height: 46,
-              borderRadius: 23,
-              backgroundColor: t.ink,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {name ? (
-              <Txt variant="title" tone="onInk">
-                {name.charAt(0).toUpperCase()}
-              </Txt>
-            ) : (
-              <Icon name="user" size={20} color={t.onInk} />
-            )}
-          </View>
+          <Press onPress={() => router.push('/profile')} scaleTo={0.92} accessibilityRole="button" accessibilityLabel={L.t('profile.title')}>
+            <Avatar size={46} />
+          </Press>
           <View style={{ flexShrink: 1 }}>
             <Txt variant="caption" tone="muted">
               {L.t('home.salam')}
@@ -50,7 +41,7 @@ export function HomeHeader() {
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <ThemeToggle />
-          <IconButton icon="bell" label={L.t('home.notifications')} badge />
+          <IconButton icon="bell" label={L.t('home.notifications')} badge={hasNews} onPress={() => router.push('/notifications')} />
         </View>
       </View>
 

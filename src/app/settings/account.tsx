@@ -8,13 +8,14 @@ import { Press } from '@/components/Press';
 import { Reveal } from '@/components/Reveal';
 import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { Segmented } from '@/components/Segmented';
 import { Sheet } from '@/components/Sheet';
 import { Txt } from '@/components/Txt';
 import { useNow } from '@/lib/useNow';
 import { accountsEnabled } from '@/lib/supabase';
 import { timeAgo } from '@/lib/timeAgo';
 import { useT } from '@/i18n';
-import { deleteAccount, sendCode, signOut, syncNow, type SyncResult, verifyCode } from '@/features/sync/engine';
+import { AccountError, createAccount, deleteAccount, signInWithPassword, signOut, syncNow, type SyncResult } from '@/features/sync/engine';
 import { useSyncMeta } from '@/features/sync/store';
 import { useAccount } from '@/features/sync/useAccount';
 import { useTheme } from '@/theme/useTheme';
@@ -49,31 +50,22 @@ function Button({ label, onPress, busy, disabled, icon, quiet }: { label: string
 
 function SignIn() {
   const L = useT();
+  const [mode, setMode] = useState<'signin' | 'create'>('signin');
   const [email, setEmail] = useState('');
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const valid = EMAIL.test(email.trim()) && password.length >= (mode === 'create' ? 8 : 1);
 
-  const send = async () => {
+  const submit = async () => {
     setBusy(true);
     setError(null);
     try {
-      await sendCode(email.trim());
-      setSentTo(email.trim());
-    } catch {
-      setError(L.t('account.errSend'));
-    } finally {
-      setBusy(false);
-    }
-  };
-  const verify = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      await verifyCode(sentTo!, code.trim());
-    } catch {
-      setError(L.t('account.errCode'));
+      if (mode === 'create') await createAccount(email, password);
+      else await signInWithPassword(email, password);
+    } catch (e) {
+      const code = e instanceof AccountError ? e.code : 'network';
+      setError(L.t(`account.err.${code}`));
     } finally {
       setBusy(false);
     }
@@ -81,42 +73,45 @@ function SignIn() {
 
   return (
     <Glass radius={26} padding={18} style={{ gap: 14 }}>
-      {!sentTo ? (
-        <>
-          <Field
-            icon="mail"
-            placeholder={L.t('account.emailPh')}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            editable={accountsEnabled}
-          />
-          <Button label={L.t('account.sendCode')} onPress={send} busy={busy} disabled={!accountsEnabled || !EMAIL.test(email.trim())} />
-        </>
-      ) : (
-        <>
-          <Txt variant="body" tone="soft">
-            {L.t('account.codeSent', { email: sentTo })}
-          </Txt>
-          <Field
-            placeholder={L.t('account.codePh')}
-            value={code}
-            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
-            autoFocus
-          />
-          <Button label={L.t('account.verify')} onPress={verify} busy={busy} disabled={code.length !== 6} />
-          <Press onPress={() => setSentTo(null)} accessibilityRole="button" style={{ alignSelf: 'center', padding: 6 }}>
-            <Txt variant="caption" tone="soft">
-              {L.t('account.changeEmail')}
-            </Txt>
-          </Press>
-        </>
+      <Segmented<'signin' | 'create'>
+        value={mode}
+        onChange={(m) => {
+          setMode(m);
+          setError(null);
+        }}
+        options={[
+          { value: 'signin', label: L.t('account.signInTab') },
+          { value: 'create', label: L.t('account.createTab') },
+        ]}
+      />
+      <Field
+        icon="mail"
+        placeholder={L.t('account.emailPh')}
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        textContentType="emailAddress"
+        editable={accountsEnabled}
+      />
+      <Field
+        icon="lock"
+        placeholder={L.t(mode === 'create' ? 'account.newPasswordPh' : 'account.passwordPh')}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        autoCapitalize="none"
+        autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
+        textContentType={mode === 'create' ? 'newPassword' : 'password'}
+        editable={accountsEnabled}
+        onSubmitEditing={() => valid && !busy && submit()}
+      />
+      <Button label={L.t(mode === 'create' ? 'account.create' : 'account.verify')} onPress={submit} busy={busy} disabled={!accountsEnabled || !valid} />
+      {mode === 'create' && (
+        <Txt variant="caption" tone="muted">
+          {L.t('account.passwordNote')}
+        </Txt>
       )}
       {error ? (
         <Txt variant="caption" tone="soft">

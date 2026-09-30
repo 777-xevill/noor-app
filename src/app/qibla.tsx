@@ -14,14 +14,15 @@ import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Txt } from '@/components/Txt';
 import { distanceKm, KAABA } from '@/lib/geo';
+import { refreshLiveLocation } from '@/features/prayer/liveLocation';
 import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
-import { useT } from '@/i18n';
+import { translate, useT } from '@/i18n';
 import { useTheme } from '@/theme/useTheme';
 
 const ALIGNED_DEG = 3;
 
-type Heading = { deg: number; kind: 'true' | 'magnetic' } | null;
+type Heading = { deg: number; kind: 'true' | 'magnetic'; /** Android: 0–3 calibration level. */ level: number } | null;
 
 function useHeading() {
   const [heading, setHeading] = useState<Heading>(null);
@@ -32,13 +33,16 @@ function useHeading() {
     const noSignal = setTimeout(() => alive && setUnavailable(true), 2500);
     (async () => {
       try {
-        await Location.requestForegroundPermissionsAsync(); // true north needs location access
+        const perm = await Location.requestForegroundPermissionsAsync(); // true north needs location access
+        // Point from where the phone is now, not from where it was when the location was last set.
+        if (perm.granted) refreshLiveLocation(translate(useSettings.getState().language, 'loc.current.fallback'), true);
         sub = await Location.watchHeadingAsync((h) => {
           if (!alive) return;
           clearTimeout(noSignal);
           setUnavailable(false);
-          if (h.trueHeading >= 0) setHeading({ deg: h.trueHeading, kind: 'true' });
-          else setHeading({ deg: h.magHeading, kind: 'magnetic' });
+          const level = Platform.OS === 'android' ? h.accuracy : 3;
+          if (h.trueHeading >= 0) setHeading({ deg: h.trueHeading, kind: 'true', level });
+          else setHeading({ deg: h.magHeading, kind: 'magnetic', level });
         });
       } catch {
         if (alive) setUnavailable(true);
@@ -146,6 +150,14 @@ export default function QiblaScreen() {
         <Chip live={!!heading} label={L.t(heading ? (heading.kind === 'true' ? 'qibla.compassTrue' : 'qibla.compassMag') : unavailable ? 'qibla.noCompass' : 'qibla.starting')} />
         <Chip icon="navigation" label={L.t('qibla.km', { km: L.num(Math.round(km).toLocaleString('en-US')) })} />
       </View>
+      {heading && heading.level < 2 && (
+        <Glass radius={20} padding={12} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+          <Icon name="refresh" size={18} color={t.text} />
+          <Txt variant="caption" style={{ flex: 1 }}>
+            {L.t('qibla.calibrate')}
+          </Txt>
+        </Glass>
+      )}
 
       <View style={{ alignItems: 'center', paddingVertical: 8 }}>
         {/* Fixed pointer: the direction the top of the phone is facing */}

@@ -16,7 +16,9 @@ import { useZakat } from '@/features/zakat/store';
 import { useCare } from '@/features/care/store';
 import { useJamaat } from '@/features/jamaat/store';
 import { usePrayerLog } from '@/features/prayer/log';
+import { refreshLiveLocation } from '@/features/prayer/liveLocation';
 import { reschedulePrayerAlerts } from '@/features/prayer/notifications';
+import { translate } from '@/i18n';
 import { useQuranProgress } from '@/features/quran/progress';
 import { useSettings } from '@/features/settings/store';
 import { startBilling } from '@/features/premium/billing';
@@ -90,6 +92,17 @@ function usePrayerAlerts(enabled: boolean) {
   }, [enabled]);
 }
 
+/** Follow the phone's position (when the user chose "use my location"), on launch and on every return. */
+function useLiveLocation(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const run = () => refreshLiveLocation(translate(useSettings.getState().language, 'loc.current.fallback'));
+    run();
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && run());
+    return () => sub.remove();
+  }, [enabled]);
+}
+
 // Keep the launch screen up until fonts and saved data are ready, so the first frame is complete.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -98,6 +111,7 @@ export default function RootLayout() {
   const storesReady = useStoresReady();
   const t = useTheme();
   usePrayerAlerts(storesReady && Platform.OS !== 'web');
+  useLiveLocation(storesReady && Platform.OS !== 'web');
   useEffect(() => (storesReady ? startCloudSync() : undefined), [storesReady]);
   useEffect(() => {
     if (storesReady) startBilling();
@@ -116,7 +130,7 @@ export default function RootLayout() {
       {/* On a wide browser window, keep the app at phone width instead of stretching it. */}
       <View style={{ flex: 1, backgroundColor: t.canvas, alignItems: 'center' }}>
         <View style={{ flex: 1, width: '100%', maxWidth: Platform.OS === 'web' ? 480 : undefined }}>
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }} />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas }, freezeOnBlur: true }} />
         </View>
       </View>
     </SafeAreaProvider>

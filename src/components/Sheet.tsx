@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spring, timing } from '@/theme/motion';
@@ -8,11 +8,30 @@ import { useT } from '@/i18n';
 import { IconButton } from './IconButton';
 import { Txt } from './Txt';
 
-/** Bottom sheet: slides up with a spring, scrim fades, tap outside or ✕ to close. */
+/** Height of the on-screen keyboard while it is open (0 when closed). */
+function useKeyboardHeight() {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const ios = Platform.OS === 'ios';
+    const show = Keyboard.addListener(ios ? 'keyboardWillShow' : 'keyboardDidShow', (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', () => setHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return height;
+}
+
+/**
+ * Bottom sheet: slides up with a spring, scrim fades, tap outside or ✕ to close. When a field inside
+ * is focused, the sheet rides up above the keyboard instead of being covered by it.
+ */
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   const t = useTheme();
   const { t: tr } = useT();
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
   const [mounted, setMounted] = useState(open);
   const progress = useSharedValue(0);
   // Mount as soon as it opens; unmount only after the closing animation finishes.
@@ -46,7 +65,8 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
               borderTopLeftRadius: 30,
               borderTopRightRadius: 30,
               paddingTop: 10,
-              paddingBottom: insets.bottom + 16,
+              paddingBottom: keyboard > 0 ? 16 : insets.bottom + 16,
+              marginBottom: keyboard,
               boxShadow: t.shadow,
             },
             panel,
@@ -57,7 +77,7 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
             <Txt variant="h2">{title}</Txt>
             <IconButton icon="close" label={tr('common.close')} size={38} onPress={onClose} />
           </View>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 6, gap: 14 }} showsVerticalScrollIndicator={false}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 6, gap: 14 }} showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
         </Animated.View>

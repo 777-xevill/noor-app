@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, TextInput, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Chip } from '@/components/Chip';
 import { Glass } from '@/components/Glass';
 import { Icon } from '@/components/Icon';
@@ -55,6 +55,8 @@ function SourceCard({ p }: { p: Passage }) {
 export default function AskScreen() {
   const t = useTheme();
   const L = useT();
+  // Opened from the question box on Home: go straight to typing.
+  const { focus } = useLocalSearchParams<{ focus?: string }>();
   const [question, setQuestion] = useState('');
   const [stage, setStage] = useState<AskStage | null>(null);
   const [result, setResult] = useState<(AskResult & { q: string }) | null>(null);
@@ -88,8 +90,9 @@ export default function AskScreen() {
             placeholder={L.t('ask.placeholder')}
             placeholderTextColor={t.textMuted}
             multiline
+            autoFocus={focus === '1'}
             editable={askEnabled}
-            style={{ minHeight: 70, fontFamily: L.lang === 'bn' ? 'HindSiliguri-Regular' : fonts.regular, fontSize: 16, lineHeight: 23, color: t.text, textAlignVertical: 'top' }}
+            style={{ minHeight: 70, fontFamily: L.lang === 'bn' ? 'NotoBengali-Regular' : fonts.regular, fontSize: 16, lineHeight: 23, color: t.text, textAlignVertical: 'top' }}
           />
           <Press onPress={() => ask()} disabled={!askEnabled || !!stage || question.trim().length < 3} scaleTo={0.97} accessibilityRole="button">
             <View

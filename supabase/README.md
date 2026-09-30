@@ -8,18 +8,14 @@ between phones. They switch on when the build is given a Supabase project.
 1. Create a project at supabase.com. Pick the Singapore region, which is the closest to Bangladesh.
 2. **SQL Editor**: run `migrations/0001_user_data.sql`.
 3. **Authentication → Sign In / Providers → Email**: keep Email on. Turn **Confirm email** on.
-4. **Authentication → Email Templates → Magic Link** and **Confirm signup** (a first sign-in uses
-   Confirm signup): the app signs in with a 6-digit code, so make both templates show the code. For example:
-
-   ```html
-   <h2>Your Noor sign-in code</h2>
-   <p>Enter this code in the app: <strong>{{ .Token }}</strong></p>
-   <p>If you didn't ask for it, you can ignore this email.</p>
-   ```
-
-5. **Authentication → SMTP**: Supabase's built-in email only sends a few messages an hour. That
-   is fine for testing. Before launch, connect a real sender such as Resend, Postmark or
-   Amazon SES.
+4. **SQL Editor**: run `migrations/0007_server_calls.sql`, then from `mobile/` run
+   `node scripts/db/set-secrets.mjs` (stores the project URL, service_role key and Groq key in Vault)
+   and `npx tsx scripts/db/ask-prompts.mts` (copies Ask Noor's prompts into the database).
+5. People sign in with **email and password**. New accounts are made by the database function
+   `create_account` (0007), which confirms the address itself, so sign-up doesn't wait for an email:
+   the project's built-in mailer only delivers to its own team members. To add email checks or
+   password reset later, connect a real sender under **Authentication → SMTP** (Resend, Postmark or
+   Amazon SES) and switch the app back to Supabase's own sign-up.
 6. **Project Settings → API**: copy the Project URL and the anon (publishable) key into
    `mobile/.env.local`, using `.env.example` as the template. For EAS builds, add the same two
    values as EAS environment variables.
@@ -75,10 +71,15 @@ community rules are in `site/terms.html`.
 ## Ask Noor (Groq, free tier)
 
 1. Create a key at console.groq.com. The free tier is enough to start.
-2. Run `migrations/0004_ask.sql`, which sets a limit of 30 questions per user per day.
-3. Set the key as a secret and deploy the function:
-   `supabase secrets set GROQ_API_KEY=... && supabase functions deploy ask`
-   Optionally set `GROQ_MODEL`. The default is `openai/gpt-oss-120b`.
+2. Run `migrations/0004_ask.sql` and `migrations/0007_server_calls.sql`, then
+   `node scripts/db/set-secrets.mjs` and `npx tsx scripts/db/ask-prompts.mts` (see Set up, step 4).
+3. The app calls the database function `ask_noor`, which holds the Groq key and calls Groq itself,
+   so nothing needs deploying. Limits per day: 30 questions per account, 20 per install for guests,
+   3,000 across the app (each question is two calls). After changing `src/features/ask/prompts.ts`,
+   run `npx tsx scripts/db/ask-prompts.mts` again.
+
+The older edge function in `functions/ask` does the same job and can replace `ask_noor` once
+someone can run `supabase functions deploy ask`.
 
 **How it stays grounded:**
 1. The model first turns the question into English search words.

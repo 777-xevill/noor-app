@@ -1,9 +1,8 @@
-import { createContext, useContext, useId, useState, type ReactNode } from 'react';
+import { createContext, memo, useContext, useState, type ReactNode } from 'react';
 import { ScreenBirth } from './Reveal';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { type SharedValue, useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { tabBarCompactTarget } from '@/lib/scrollChrome';
 import { useTheme } from '@/theme/useTheme';
@@ -14,33 +13,24 @@ const ScrollContext = createContext<SharedValue<number> | null>(null);
 /** Vertical scroll offset of the enclosing screen (for parallax and scroll-linked effects). */
 export const useScreenScroll = () => useContext(ScrollContext);
 
-/** The misty canvas every screen sits on: a soft vertical fade plus two pools of light. */
-export function Canvas() {
+/**
+ * The misty canvas every screen sits on: a soft vertical fade plus two pools of light. It is one
+ * pre-rendered image per palette (scripts/data/render_canvas.py), so a screen draws a single texture
+ * instead of computing full-screen gradients, which is noticeably slow on budget Android phones.
+ */
+const CANVAS = {
+  light: require('../../assets/images/canvas/light.png'),
+  dark: require('../../assets/images/canvas/dark.png'),
+  midnight: require('../../assets/images/canvas/midnight.png'),
+};
+
+export const Canvas = memo(function Canvas() {
   const t = useTheme();
-  // Gradient ids are document-global on web; keep them unique per mounted screen.
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const top = `glowTop${uid}`;
-  const bottom = `glowBottom${uid}`;
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <LinearGradient colors={[t.canvasTop, t.canvas]} style={StyleSheet.absoluteFill} />
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <RadialGradient id={top} cx="18%" cy="0%" rx="85%" ry="45%">
-            <Stop offset="0" stopColor={t.glow} stopOpacity={t.scheme === 'dark' ? 0.55 : 0.95} />
-            <Stop offset="1" stopColor={t.glow} stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id={bottom} cx="100%" cy="78%" rx="70%" ry="40%">
-            <Stop offset="0" stopColor={t.glow} stopOpacity={t.scheme === 'dark' ? 0.25 : 0.55} />
-            <Stop offset="1" stopColor={t.glow} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill={`url(#${top})`} />
-        <Rect width="100%" height="100%" fill={`url(#${bottom})`} />
-      </Svg>
-    </View>
-  );
-}
+  const source = t.scheme === 'light' ? CANVAS.light : t.canvas === '#000000' ? CANVAS.midnight : CANVAS.dark;
+  return <Image source={source} resizeMode="stretch" style={styles.canvas} fadeDuration={0} />;
+});
+
+const styles = StyleSheet.create({ canvas: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' } });
 
 // Direction changes smaller than this are treated as jitter.
 const SCROLL_SLOP = 4;

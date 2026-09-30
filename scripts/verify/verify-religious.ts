@@ -492,6 +492,7 @@ async function main() {
     ['hajj: the guide and kids’ prayer outline are still marked as not reviewed by a scholar', HAJJ_REVIEWED === false && KIDS_REVIEWED === false],
     ['hajj: checklist items are unique and in both languages', new Set(CHECKLIST.map((c) => c.id)).size === CHECKLIST.length && CHECKLIST.every((c) => c.en && c.bn)],
     ['kids: 28 distinct Arabic letters, every prayer step in both languages, every dua chapter exists', ALPHABET.length === 28 && new Set(ALPHABET.map((a) => a.letter)).size === 28 && ALPHABET.every((a) => a.letter.length === 1 && a.letter >= '\u0621' && a.letter <= '\u064a' && a.name && a.nameBn) && KIDS_SALAH.every((x) => x.en && x.bn && x.textEn && x.textBn) && KIDS_DUAS.every((d) => chapterIds.has(d.chapter))],
+    ['kids: every letter has an Arabic name to read aloud, and the name starts with that letter', ALPHABET.every((a) => a.ar && (a.letter === 'ا' ? a.ar.startsWith('أ') : a.ar.replace(/[ً-ْ]/g, '').startsWith(a.letter)))],
     ['lectures: every channel is an https YouTube link with a unique id and both languages', new Set(CHANNELS.map((c) => c.id)).size === CHANNELS.length && CHANNELS.every((c) => /^https:\/\/www\.youtube\.com\/@[A-Za-z0-9._-]+$/.test(c.url) && c.about && c.aboutBn)],
   ];
   rewardChecks.push(...extraChecks);

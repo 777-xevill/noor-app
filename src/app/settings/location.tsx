@@ -64,6 +64,11 @@ export default function LocationScreen() {
         <Txt variant="caption" tone="muted" tabular>
           {loc.latitude.toFixed(4)}°, {loc.longitude.toFixed(4)}° · {loc.timeZone}
         </Txt>
+        {loc.source === 'gps' && (
+          <Txt variant="caption" tone="soft" style={{ marginTop: 4 }}>
+            {L.t('loc.auto')}
+          </Txt>
+        )}
       </Glass>
 
       <Press onPress={useDevice} disabled={busy} accessibilityRole="button" accessibilityLabel={L.t('loc.useDevice')}>

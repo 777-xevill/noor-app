@@ -13,9 +13,9 @@ const DARK: Palette = { bg: '#24272C', text: '#F1F2F4', soft: '#C3C7CD', muted: 
 function Layout({ p, c, wide }: { p: PrayerWidgetProps | null; c: Palette; wide: boolean }) {
   const bn = p?.lang === 'bn';
   const f = {
-    regular: bn ? 'HindSiliguri_400Regular' : 'Geist_400Regular',
-    medium: bn ? 'HindSiliguri_500Medium' : 'Geist_500Medium',
-    semibold: bn ? 'HindSiliguri_600SemiBold' : 'Geist_600SemiBold',
+    regular: bn ? 'NotoSansBengali_400Regular' : 'Geist_400Regular',
+    medium: bn ? 'NotoSansBengali_500Medium' : 'Geist_500Medium',
+    semibold: bn ? 'NotoSansBengali_600SemiBold' : 'Geist_600SemiBold',
   };
 
   if (!p) {

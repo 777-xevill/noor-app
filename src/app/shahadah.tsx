@@ -8,6 +8,8 @@ import { Txt } from '@/components/Txt';
 import { SHAHADAH } from '@/data/phrases';
 import { onPhoto } from '@/theme/tokens';
 import { useT } from '@/i18n';
+import { speakArabic, stopSpeaking } from '@/lib/speakArabic';
+import { useEffect } from 'react';
 import { useTheme } from '@/theme/useTheme';
 
 const PHOTO = require('../../assets/images/sunset-istanbul.jpg');
@@ -16,6 +18,7 @@ export default function ShahadahScreen() {
   const t = useTheme();
   const L = useT();
   const bn = L.lang === 'bn';
+  useEffect(() => stopSpeaking, []);
   return (
     <Screen gap={16}>
       <ScreenHeader
@@ -29,6 +32,9 @@ export default function ShahadahScreen() {
         <Txt variant="arabic" color={onPhoto.text} style={{ textAlign: 'center', fontSize: 30, lineHeight: 64 }}>
           {SHAHADAH.ar}
         </Txt>
+        <View style={{ alignItems: 'center', marginTop: 12 }}>
+          <IconButton icon="volume" label={L.t('kids.listen')} variant="photo" size={48} onPress={() => speakArabic(SHAHADAH.ar, 0.75)} />
+        </View>
       </View>
       <Glass radius={26} padding={18} style={{ gap: 12 }}>
         <Txt variant="eyebrow" tone="muted">

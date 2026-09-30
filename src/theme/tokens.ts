@@ -28,8 +28,9 @@ export type Palette = {
   pill: string;
   /** Top-edge sheen that makes glass read as glass. */
   specular: string;
-  shadow: string;
-  shadowSoft: string;
+  /** Undefined on Android, where blurred box shadows under every card are slow to draw on budget phones. */
+  shadow: string | undefined;
+  shadowSoft: string | undefined;
 };
 
 export const light: Palette = {

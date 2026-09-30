@@ -89,9 +89,9 @@
             "./node_modules/@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf",
             "./node_modules/@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf",
             "./node_modules/@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf",
-            "./node_modules/@expo-google-fonts/hind-siliguri/400Regular/HindSiliguri_400Regular.ttf",
-            "./node_modules/@expo-google-fonts/hind-siliguri/500Medium/HindSiliguri_500Medium.ttf",
-            "./node_modules/@expo-google-fonts/hind-siliguri/600SemiBold/HindSiliguri_600SemiBold.ttf"
+            "./node_modules/@expo-google-fonts/noto-sans-bengali/400Regular/NotoSansBengali_400Regular.ttf",
+            "./node_modules/@expo-google-fonts/noto-sans-bengali/500Medium/NotoSansBengali_500Medium.ttf",
+            "./node_modules/@expo-google-fonts/noto-sans-bengali/600SemiBold/NotoSansBengali_600SemiBold.ttf"
           ],
           "widgets": [
             {
@@ -127,6 +127,20 @@
           "locationWhenInUsePermission": "Noor uses your location to calculate prayer times and the Qibla direction. It stays on your phone.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Noor lets you choose a profile photo from your library. It stays on your phone.",
+          "cameraPermission": false,
+          "microphonePermission": false,
+          "colors": {
+            "cropToolbarColor": "#16181C",
+            "cropToolbarIconColor": "#FFFFFF",
+            "cropToolbarActionTextColor": "#FFFFFF",
+            "cropBackgroundColor": "#000000"
+          }
         }
       ],
       "./plugins/withWorkManagerFix"

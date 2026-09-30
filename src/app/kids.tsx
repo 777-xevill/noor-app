@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { router } from 'expo-router';
 import { Glass } from '@/components/Glass';
@@ -13,6 +13,7 @@ import { Txt } from '@/components/Txt';
 import { ALPHABET, type ArabicLetter } from '@/data/alphabet';
 import { KIDS_DUAS, KIDS_REVIEWED, KIDS_SALAH } from '@/data/kidsSalah';
 import { useT } from '@/i18n';
+import { hasArabicVoice, speakArabic, stopSpeaking } from '@/lib/speakArabic';
 import { fonts } from '@/theme/fonts';
 import { useTheme } from '@/theme/useTheme';
 
@@ -21,6 +22,11 @@ export default function KidsScreen() {
   const L = useT();
   const lang = L.lang === 'bn' ? 'bn' : 'en';
   const [letter, setLetter] = useState<ArabicLetter | null>(null);
+  const [noVoice, setNoVoice] = useState(false);
+  useEffect(() => {
+    hasArabicVoice().then((ok) => setNoVoice(!ok));
+    return stopSpeaking;
+  }, []);
 
   return (
     <Screen gap={18}>
@@ -31,7 +37,10 @@ export default function KidsScreen() {
           <Txt variant="title">{L.t('kids.alphabet')}</Txt>
           <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 8 }}>
             {ALPHABET.map((a, i) => (
-              <Press key={i} onPress={() => setLetter(a)} scaleTo={0.9} accessibilityRole="button" accessibilityLabel={lang === 'bn' ? a.nameBn : a.name} style={{ width: '22%', flexGrow: 1 }}>
+              <Press key={i} onPress={() => {
+                  setLetter(a);
+                  speakArabic(a.ar);
+                }} scaleTo={0.9} accessibilityRole="button" accessibilityLabel={lang === 'bn' ? a.nameBn : a.name} style={{ width: '22%', flexGrow: 1 }}>
                 <View style={{ height: 76, borderRadius: 18, backgroundColor: t.pill, alignItems: 'center', justifyContent: 'center' }}>
                   <Txt variant="quran" style={{ fontSize: 34, lineHeight: 56 }}>
                     {a.letter}
@@ -48,7 +57,9 @@ export default function KidsScreen() {
 
       <Reveal index={1}>
         <ListGroup title={L.t('kids.learn')}>
-          <ListRow icon="library" title={L.t('kids.surahs')} subtitle={L.t('kids.surahsSub')} onPress={() => router.push('/learn')} last />
+          <ListRow icon="library" title={L.t('kids.surahs')} subtitle={L.t('kids.surahsSub')} onPress={() => router.push('/learn')} />
+          <ListRow icon="sparkles" title={L.t('kids.names')} subtitle={L.t('kids.namesSub')} onPress={() => router.push('/names')} />
+          <ListRow icon="heart" title={L.t('kids.shahadah')} subtitle={L.t('kids.shahadahSub')} onPress={() => router.push('/shahadah')} last />
         </ListGroup>
       </Reveal>
 
@@ -109,6 +120,19 @@ export default function KidsScreen() {
             <Txt variant="body" tone="soft">
               {L.t('kids.sound', { sound: letter.sound })}
             </Txt>
+            <Press onPress={() => speakArabic(letter.ar)} scaleTo={0.95} accessibilityRole="button" accessibilityLabel={L.t('kids.listen')} style={{ marginTop: 8 }}>
+              <View style={{ height: 48, paddingHorizontal: 22, borderRadius: 24, backgroundColor: t.ink, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Icon name="volume" size={18} color={t.onInk} />
+                <Txt variant="title" tone="onInk">
+                  {L.t('kids.listen')}
+                </Txt>
+              </View>
+            </Press>
+            {noVoice && (
+              <Txt variant="caption" tone="muted" style={{ textAlign: 'center' }}>
+                {L.t('kids.noVoice')}
+              </Txt>
+            )}
           </View>
         )}
       </Sheet>

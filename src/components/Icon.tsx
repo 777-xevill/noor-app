@@ -92,6 +92,9 @@ import Headphones from 'lucide-react-native/icons/headphones';
 import Shuffle from 'lucide-react-native/icons/shuffle';
 import Eye from 'lucide-react-native/icons/eye';
 import EyeOff from 'lucide-react-native/icons/eye-off';
+import Lock from 'lucide-react-native/icons/lock';
+import Camera from 'lucide-react-native/icons/camera';
+import ChartColumn from 'lucide-react-native/icons/chart-column';
 
 type IconProps = { size?: number; color: string; strokeWidth?: number; fill?: string };
 
@@ -236,6 +239,9 @@ const ICONS = {
   shuffle: lucide(Shuffle),
   eye: lucide(Eye),
   eyeOff: lucide(EyeOff),
+  lock: lucide(Lock),
+  camera: lucide(Camera),
+  chart: lucide(ChartColumn),
   kaaba: Kaaba,
 } satisfies Record<string, ComponentType<IconProps>>;
 

@@ -48,6 +48,12 @@ export type SettingsState = PrayerPrefs & {
   /** everyayah.com folder of the chosen reciter */
   reciter: string;
   readerView: ReaderView;
+  /** Random id for this install (Ask Noor's daily limit for guests). Stays on the phone. */
+  installId: string;
+  /** Profile photo, copied into the app's own storage. Stays on the phone. */
+  avatarUri: string;
+  /** When the notifications page was last opened (ms), for the bell's dot. */
+  notificationsSeenAt: number;
 
   set: (patch: Partial<Omit<SettingsState, 'set' | 'setLocation' | 'setThemeMode' | 'setDisplayName'>>) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -76,6 +82,9 @@ const DEFAULTS = {
   quran: { showTranslit: false, showEnglish: true, showBangla: true, arabicSize: 30 } as QuranPrefs,
   reciter: 'Alafasy_128kbps',
   readerView: 'normal' as ReaderView,
+  installId: '',
+  avatarUri: '',
+  notificationsSeenAt: 0,
 };
 
 export const useSettings = create<SettingsState>()(

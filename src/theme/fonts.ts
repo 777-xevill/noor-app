@@ -9,18 +9,20 @@ export const fontAssets = {
   // Amiri Quran is drawn for the Uthmani script (small high letters, pause marks, rounded zeros).
   'AmiriQuran-Regular': require('@expo-google-fonts/amiri-quran/400Regular/AmiriQuran_400Regular.ttf'),
   // Bangla UI (also covers Latin), used in place of Geist when the app language is Bangla.
-  'HindSiliguri-Regular': require('@expo-google-fonts/hind-siliguri/400Regular/HindSiliguri_400Regular.ttf'),
-  'HindSiliguri-Medium': require('@expo-google-fonts/hind-siliguri/500Medium/HindSiliguri_500Medium.ttf'),
-  'HindSiliguri-SemiBold': require('@expo-google-fonts/hind-siliguri/600SemiBold/HindSiliguri_600SemiBold.ttf'),
-  'HindSiliguri-Bold': require('@expo-google-fonts/hind-siliguri/700Bold/HindSiliguri_700Bold.ttf'),
+  // Noto Sans Bengali, not Hind Siliguri: Hind draws the digit ১ as a small half-height hook, so
+  // times like ১১:৪৯ looked cut in half. Noto's digits are all full height (and it's Android's own Bangla face).
+  'NotoBengali-Regular': require('@expo-google-fonts/noto-sans-bengali/400Regular/NotoSansBengali_400Regular.ttf'),
+  'NotoBengali-Medium': require('@expo-google-fonts/noto-sans-bengali/500Medium/NotoSansBengali_500Medium.ttf'),
+  'NotoBengali-SemiBold': require('@expo-google-fonts/noto-sans-bengali/600SemiBold/NotoSansBengali_600SemiBold.ttf'),
+  'NotoBengali-Bold': require('@expo-google-fonts/noto-sans-bengali/700Bold/NotoSansBengali_700Bold.ttf'),
 };
 
 /** Geist family → Bangla equivalent at the same weight. */
 export const BANGLA_FAMILY: Record<string, string> = {
-  'Geist-Regular': 'HindSiliguri-Regular',
-  'Geist-Medium': 'HindSiliguri-Medium',
-  'Geist-SemiBold': 'HindSiliguri-SemiBold',
-  'Geist-Bold': 'HindSiliguri-Bold',
+  'Geist-Regular': 'NotoBengali-Regular',
+  'Geist-Medium': 'NotoBengali-Medium',
+  'Geist-SemiBold': 'NotoBengali-SemiBold',
+  'Geist-Bold': 'NotoBengali-Bold',
 };
 
 export const fonts = {

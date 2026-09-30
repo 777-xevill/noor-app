@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, FlatList, Platform, Share, Text, View, type ViewToken } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlaylist, useAudioPlaylistStatus } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chip } from '@/components/Chip';
@@ -229,15 +229,30 @@ export default function ReaderScreen() {
   const listRef = useRef<FlatList<Ayah>>(null);
   useReadingTimer();
 
-  // Recitation: one ayah at a time, continuing to the next until the surah ends.
-  const player = useAudioPlayer(null);
-  const status = useAudioPlayerStatus(player);
+  // Recitation: the whole surah as one playlist, so the player buffers the next ayah while the current
+  // one plays and moves on without a pause. It's built on the first play (not on opening the surah),
+  // so just reading doesn't download audio.
+  const [sources, setSources] = useState<string[]>([]);
+  const player = useAudioPlaylist({ sources });
+  const status = useAudioPlaylistStatus(player);
   const [playingAyah, setPlayingAyah] = useState<number | null>(null);
   const [audioError, setAudioError] = useState(false);
+  const pendingStart = useRef<number | null>(null);
 
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
   }, []);
+
+  // A new reciter (or surah) needs a new playlist; stop rather than keep playing the old one.
+  const sourcesKey = `${reciter}:${n}`;
+  const builtFor = useRef('');
+  useEffect(() => {
+    if (builtFor.current && builtFor.current !== sourcesKey) {
+      setSources([]);
+      setPlayingAyah(null);
+      builtFor.current = '';
+    }
+  }, [sourcesKey]);
 
   const playingRef = useRef<number | null>(null);
   const play = useCallback(
@@ -249,24 +264,49 @@ export default function ReaderScreen() {
         player.pause();
         return;
       }
-      player.replace({ uri: localAyahUri(reciter, n, ayah) ?? ayahAudioUrl(n, ayah, reciter) });
+      if (builtFor.current !== sourcesKey) {
+        // Downloaded ayahs play from the phone; the rest stream.
+        builtFor.current = sourcesKey;
+        pendingStart.current = ayah;
+        setSources(Array.from({ length: meta.ayahs }, (_, i) => localAyahUri(reciter, n, i + 1) ?? ayahAudioUrl(n, i + 1, reciter)));
+        return;
+      }
+      player.skipTo(ayah - 1);
       player.play();
     },
-    [player, n, reciter],
+    [player, n, reciter, meta.ayahs, sourcesKey],
   );
 
-  // When an ayah finishes, continue with the next one (and keep it in view).
+  // Once the playlist exists, start where the reader asked.
   useEffect(() => {
-    const sub = player.addListener('playbackStatusUpdate', (st) => {
-      if (!st.didJustFinish || playingRef.current === null) return;
-      const next = playingRef.current + 1;
-      if (next <= meta.ayahs) {
-        play(next);
-        listRef.current?.scrollToIndex({ index: next - 1, animated: true, viewPosition: 0.2 });
-      } else play(null);
+    const start = pendingStart.current;
+    if (start === null || !sources.length) return;
+    pendingStart.current = null;
+    player.skipTo(start - 1);
+    player.play();
+  }, [player, sources]);
+
+  // Follow the playlist: highlight the ayah being recited, keep it in view, and stop after the last one.
+  useEffect(() => {
+    const track = player.addListener('trackChanged', ({ currentIndex }) => {
+      if (playingRef.current === null || currentIndex < 0) return;
+      const ayah = currentIndex + 1;
+      if (ayah === playingRef.current) return;
+      playingRef.current = ayah;
+      setPlayingAyah(ayah);
+      listRef.current?.scrollToIndex({ index: currentIndex, animated: true, viewPosition: 0.2 });
     });
-    return () => sub.remove();
-  }, [player, meta.ayahs, play]);
+    const end = player.addListener('playlistStatusUpdate', (st) => {
+      if (st.didJustFinish && playingRef.current === meta.ayahs) {
+        playingRef.current = null;
+        setPlayingAyah(null);
+      }
+    });
+    return () => {
+      track.remove();
+      end.remove();
+    };
+  }, [player, meta.ayahs]);
 
   // If a recitation doesn't start within a few seconds, say so instead of spinning silently.
   useEffect(() => {

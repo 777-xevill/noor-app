@@ -60,7 +60,7 @@ function Composer({ onPosted }: { onPosted: () => void }) {
         placeholder={L.t('community.placeholder')}
         placeholderTextColor={t.textMuted}
         multiline
-        style={{ minHeight: 84, fontFamily: L.lang === 'bn' ? 'HindSiliguri-Regular' : fonts.regular, fontSize: 16, lineHeight: 23, color: t.text, textAlignVertical: 'top' }}
+        style={{ minHeight: 84, fontFamily: L.lang === 'bn' ? 'NotoBengali-Regular' : fonts.regular, fontSize: 16, lineHeight: 23, color: t.text, textAlignVertical: 'top' }}
       />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <Txt variant="caption" tone="muted" style={{ flex: 1 }}>

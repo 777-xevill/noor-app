@@ -1,18 +1,27 @@
 import { supabase } from '@/lib/supabase';
+import { useSettings } from '@/features/settings/store';
 import type { Lang } from '@/i18n/langs';
 import { SURAHS } from '@/data/surahs';
 import { loadCorpus } from './corpus';
 import { ANSWER_OPTIONS, answerMessages, cleanAnswer, DEFAULT_MODEL, KEYWORD_OPTIONS, keywordMessages, type Message, parseKeywords } from './prompts';
 import { type Passage, search } from './search';
 
-// Ask Noor runs through the `ask` edge function (supabase/functions/ask), which keeps the Groq key
-// on the server. For testing without Supabase, EXPO_PUBLIC_GROQ_API_KEY calls Groq directly;
-// never ship a build with that set, because anyone could read the key out of the app.
+// Ask Noor runs through the database function `ask_noor` (supabase/migrations/0007_server_calls.sql),
+// which keeps the Groq key on the server, builds the prompts from the same text as prompts.ts, and
+// limits questions per account (or per install for guests). Only without Supabase does
+// EXPO_PUBLIC_GROQ_API_KEY call Groq directly, for local testing; never ship a build with that set.
 const DIRECT_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY;
 
 export const askEnabled = supabase !== null || !!DIRECT_KEY;
-// A test key, when set, wins over the server, so Ask works locally before the function is deployed.
-const useServer = !DIRECT_KEY && supabase !== null;
+const useServer = supabase !== null;
+
+function installId(): string {
+  const { installId: id, set } = useSettings.getState();
+  if (id) return id;
+  const next = Array.from({ length: 24 }, () => Math.floor(Math.random() * 36).toString(36)).join('');
+  set({ installId: next });
+  return next;
+}
 
 export class AskError extends Error {
   constructor(public code: 'off' | 'signin' | 'limit' | 'network') {
@@ -32,15 +41,13 @@ async function direct(messages: Message[], options: Record<string, unknown>) {
   return (data.choices?.[0]?.message?.content as string) ?? '';
 }
 
-async function viaServer(body: Record<string, unknown>): Promise<string> {
-  const { data: session } = await supabase!.auth.getSession();
-  if (!session.session) throw new AskError('signin');
-  const { data, error } = await supabase!.functions.invoke('ask', { body });
+async function viaServer(body: { phase: 'keywords' | 'answer'; question: string; lang?: Lang; sources?: { tag: string; text: string }[] }): Promise<string> {
+  const { data, error } = await supabase!.rpc('ask_noor', { ...body, device: installId() });
   if (error) {
-    const status = (error as { context?: { status?: number } }).context?.status;
-    throw new AskError(status === 429 ? 'limit' : status === 401 ? 'signin' : 'network');
+    const code = error.message;
+    throw new AskError(code === 'limit' ? 'limit' : code === 'signin' ? 'signin' : 'network');
   }
-  return (data as { text?: string })?.text ?? '';
+  return typeof data === 'string' ? data : '';
 }
 
 export type AskResult = { text: string; sources: Passage[] };

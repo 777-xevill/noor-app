@@ -22,7 +22,16 @@ export function RamadanCard() {
   if (!info.inRamadan && info.daysUntil > 60) return null;
 
   const today = info.inRamadan ? info.days.find((d) => sameDay(d.g, schedule.day)) : undefined;
-  const next = today && now < today.sehriEnds ? { label: L.t('ramadan.sehriEnds'), at: today.sehriEnds } : today && now < today.iftar ? { label: L.t('ramadan.iftar'), at: today.iftar } : null;
+  // After iftar, count down to tomorrow's sehri (unless today was the last day).
+  const tomorrow = today ? info.days.find((d) => d.day === today.day + 1) : undefined;
+  const next =
+    today && now < today.sehriEnds
+      ? { label: L.t('ramadan.sehriEnds'), at: today.sehriEnds }
+      : today && now < today.iftar
+        ? { label: L.t('ramadan.iftar'), at: today.iftar }
+        : tomorrow
+          ? { label: L.t('ramadan.sehriEnds'), at: tomorrow.sehriEnds }
+          : null;
 
   return (
     <Press onPress={() => router.push('/ramadan')} scaleTo={0.98} accessibilityRole="button" accessibilityLabel={L.t('ramadan.title')}>

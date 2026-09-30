@@ -1,4 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Chip } from '@/components/Chip';
@@ -7,7 +9,9 @@ import { useScreenScroll } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { addDays } from '@/lib/dates';
 import { useT } from '@/i18n';
+import { ALERT_ICON, ALERT_LABEL, NEXT_ALERT } from '@/features/prayer/alertCycle';
 import { useSchedule } from '@/features/prayer/useSchedule';
+import { useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
 import { onPhoto } from '@/theme/tokens';
 import { useTheme } from '@/theme/useTheme';
@@ -24,6 +28,15 @@ export function NextPrayerHero() {
   const clock = L.clock(at, loc.timeZone);
   const sunrise = L.clock(schedule.times.sunrise, loc.timeZone);
   const scrollY = useScreenScroll();
+  const alerts = useSettings((st) => st.alerts);
+  const setAlerts = useSettings((st) => st.set);
+  const alert = alerts[key];
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    if (!flash) return;
+    const id = setTimeout(() => setFlash(false), 2500);
+    return () => clearTimeout(id);
+  }, [flash, alert]);
 
   // Parallax: the photo travels slower than the card while scrolling, and swells on pull-down.
   const photoStyle = useAnimatedStyle(() => {
@@ -64,10 +77,22 @@ export function NextPrayerHero() {
 
           <View style={[styles.row, { alignItems: 'center' }]}>
             <View style={{ flexDirection: 'row', gap: 8, flexShrink: 1, flexWrap: 'wrap' }}>
-              <Chip variant="photo" label={L.t('time.in', { t: L.countdown(at.getTime() - now.getTime()) })} />
+              {/* Just after the bell is tapped, say what the next prayer's alert is now. */}
+              <Chip variant="photo" label={flash ? `${L.prayer(key)} · ${L.t(ALERT_LABEL[alert])}` : L.t('time.in', { t: L.countdown(at.getTime() - now.getTime()) })} />
               <Chip variant="photo" icon="sunrise" label={L.t('home.sunriseAt', { t: sunrise.hm })} />
             </View>
-            <IconButton icon="bell" label={L.t('home.adhanOn')} variant="photo" size={42} />
+            <IconButton
+              icon={ALERT_ICON[alert]}
+              label={`${L.prayer(key)}: ${L.t(ALERT_LABEL[alert])}`}
+              variant="photo"
+              size={42}
+              onPress={() => {
+                const next = NEXT_ALERT[alert];
+                setAlerts({ alerts: { ...alerts, [key]: next } });
+                setFlash(true);
+                if (Platform.OS !== 'web') Haptics.selectionAsync();
+              }}
+            />
           </View>
 
           <Txt variant="micro" color={onPhoto.textSoft}>

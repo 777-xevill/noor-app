@@ -34,9 +34,17 @@ export function useScheme(): Scheme {
   return host ?? (os === 'dark' ? 'dark' : 'light');
 }
 
+// Android draws box shadows with a blur on the CPU/GPU for every card on every frame they move;
+// on budget phones that alone makes scrolling and tab switches stutter. Cards keep their glass fill
+// and border there, which already sets them apart from the canvas.
+const flat = (p: Palette): Palette => (Platform.OS === 'android' ? { ...p, shadow: undefined, shadowSoft: undefined } : p);
+const LIGHT = flat(light);
+const DARK = flat(dark);
+const MIDNIGHT = flat(midnight);
+
 export function useTheme(): Palette {
   const scheme = useScheme();
   const wantsMidnight = useSettings((s) => s.darkStyle === 'midnight');
   const plus = usePlus();
-  return scheme === 'dark' ? (wantsMidnight && plus ? midnight : dark) : light;
+  return scheme === 'dark' ? (wantsMidnight && plus ? MIDNIGHT : DARK) : LIGHT;
 }
