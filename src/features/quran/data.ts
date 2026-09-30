@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { QURAN_ASSETS } from '@/data/assets';
+import { QURAN_ASSETS, WBW_ASSETS } from '@/data/assets';
 import { SURAHS } from '@/data/surahs';
 import { loadDataAsset } from '@/lib/assetData';
 
@@ -42,6 +42,21 @@ export function useSurah(n: number) {
   return state.n === n ? state : { data: null, error: null, n };
 }
 
-/** Everyayah.com verse-by-verse recitation (Mishary Rashid Alafasy). */
-export const ayahAudioUrl = (surah: number, ayah: number) =>
-  `https://everyayah.com/data/Alafasy_128kbps/${String(surah).padStart(3, '0')}${String(ayah).padStart(3, '0')}.mp3`;
+/** Word-by-word meanings and tajweed markup for one surah (see scripts/data/fetch_data.py, wbw_all). */
+export type WordSurah = { n: number; a: { n: number; w: [string, string, string, string][]; t: string }[] };
+
+export function useSurahWords(n: number, enabled: boolean) {
+  const [state, setState] = useState<{ data: WordSurah | null; n: number }>({ data: null, n });
+  useEffect(() => {
+    if (!enabled) return;
+    let alive = true;
+    loadDataAsset<WordSurah>(WBW_ASSETS[n - 1]).then(
+      (data) => alive && setState({ data, n }),
+      () => alive && setState({ data: null, n }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, [n, enabled]);
+  return enabled && state.n === n ? state.data : null;
+}

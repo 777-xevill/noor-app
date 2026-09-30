@@ -9,11 +9,14 @@ const root = join(import.meta.dirname, '..');
 const dist = join(root, 'dist-preview');
 const out = join(root, 'preview');
 
-execSync('npx expo export -p web --output-dir dist-preview', {
+execSync('npx expo export -p web --output-dir dist-preview --clear', {
   cwd: root,
   stdio: 'inherit',
-  // Secrets from .env.local must never reach the public preview; an empty variable wins over .env files.
-  env: { ...process.env, EXPO_PUBLIC_DEMO_DATA: '1', EXPO_PUBLIC_GROQ_API_KEY: '' },
+  // Secrets from .env.local must never reach the public preview. Setting the var to '' is not enough:
+  // Expo's own .env loader treats an empty override as unset and fills it back in from .env.local. So
+  // disable .env loading outright (EXPO_NO_DOTENV) — the preview only needs EXPO_PUBLIC_DEMO_DATA, set here.
+  // --clear busts Metro's transform cache, which otherwise keeps serving an old build's inlined env values.
+  env: { ...process.env, EXPO_NO_DOTENV: '1', EXPO_PUBLIC_DEMO_DATA: '1', EXPO_PUBLIC_GROQ_API_KEY: '' },
 });
 
 const walk = (dir) =>

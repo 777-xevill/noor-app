@@ -5,6 +5,8 @@ import { toHijri } from '@/lib/hijri';
 import { useRamadan } from '@/features/ramadan/store';
 import { RAMADAN } from '@/features/ramadan/calendar';
 import { type AlertKind, useSettings } from '@/features/settings/store';
+import { jamaatAt } from '@/features/jamaat/rules';
+import { useJamaat } from '@/features/jamaat/store';
 import { ADHAN_SOUND } from './adhan';
 import { PRAYERS, prayerTimesFor } from './times';
 
@@ -54,6 +56,20 @@ export async function requestAlertPermission(): Promise<boolean> {
   return asked.granted;
 }
 
+/** Whether Noor currently has permission to show alerts, without prompting. */
+export async function hasAlertPermission(): Promise<boolean> {
+  const N = load();
+  if (!N) return false;
+  return (await N.getPermissionsAsync()).granted;
+}
+
+/** How many prayer alerts are actually sitting in the OS's queue right now. */
+export async function pendingAlertCount(): Promise<number> {
+  const N = load();
+  if (!N) return 0;
+  return (await N.getAllScheduledNotificationsAsync()).length;
+}
+
 export async function reschedulePrayerAlerts() {
   const N = load();
   if (!N) return;
@@ -66,6 +82,7 @@ export async function reschedulePrayerAlerts() {
   // Alerts are written in the app's language at the time they're scheduled.
   const L = makeI18n(s.language);
   const ramadan = useRamadan.getState();
+  const { mosque, alertBefore: jamaatBefore } = useJamaat.getState();
 
   await N.cancelAllScheduledNotificationsAsync();
   const now = Date.now();
@@ -121,6 +138,23 @@ export async function reschedulePrayerAlerts() {
               sound: alert.sound,
             },
             trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: early, channelId: alert.channelId },
+          });
+          pending++;
+        }
+      }
+      // A reminder before the followed mosque's jamaat, if it has a time for this prayer.
+      const rule = mosque?.times[key];
+      if (mosque && rule && jamaatBefore > 0) {
+        const jamaat = jamaatAt(rule, at, day, loc.timeZone);
+        const soon = new Date(jamaat.getTime() - jamaatBefore * 60_000);
+        if (soon.getTime() > now && pending < MAX_PENDING) {
+          await N.scheduleNotificationAsync({
+            content: {
+              title: L.t('notif.jamaatTitle', { prayer: label, n: jamaatBefore }),
+              body: L.t('notif.jamaatBody', { mosque: mosque.name, time: L.clockFull(jamaat, loc.timeZone) }),
+              sound: true,
+            },
+            trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: soon, channelId: 'prayer-sound' },
           });
           pending++;
         }

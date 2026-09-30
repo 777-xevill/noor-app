@@ -8,8 +8,8 @@ between phones. They switch on when the build is given a Supabase project.
 1. Create a project at supabase.com. Pick the Singapore region, which is the closest to Bangladesh.
 2. **SQL Editor**: run `migrations/0001_user_data.sql`.
 3. **Authentication → Sign In / Providers → Email**: keep Email on. Turn **Confirm email** on.
-4. **Authentication → Email Templates → Magic Link**: the app signs in with a 6-digit code, so
-   make the template show the code. For example:
+4. **Authentication → Email Templates → Magic Link** and **Confirm signup** (a first sign-in uses
+   Confirm signup): the app signs in with a 6-digit code, so make both templates show the code. For example:
 
    ```html
    <h2>Your Noor sign-in code</h2>
@@ -92,3 +92,20 @@ checks this.
 
 For quick testing without Supabase, set `EXPO_PUBLIC_GROQ_API_KEY` in `.env.local`. Never ship
 a build with it, because the key can be read out of the app.
+
+## Mosque jamaat times (optional)
+
+Run `migrations/0005_jamaat.sql`. People follow a mosque and type its jamaat times on their own
+phone, which needs no server. With Supabase on, they can also share the times, and others can
+use, confirm or report them. The app reads the `jamaat_public` view and writes only through checked
+functions. Shared times are always shown as "not checked by Noor".
+
+**Moderation.** Three reports hide an entry. In Studio, open `mosque_jamaat`: to restore an entry set
+`hidden = false` and `report_count = 0`; to remove it, delete the row. Times confirmed by two people
+can't be replaced for 30 days unless they are reported first.
+
+## Family circles (optional)
+
+Run `migrations/0006_circles.sql`. A circle is a private group that shares out the 30 juz to finish
+a khatm together. People join with a 6-letter code and see only the names they chose for the circle.
+Everything goes through functions; no table is readable by app users. There is no chat.

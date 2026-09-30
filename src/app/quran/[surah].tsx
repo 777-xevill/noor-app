@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, AppState, FlatList, Platform, Share, View, type ViewToken } from 'react-native';
+import { ActivityIndicator, AppState, FlatList, Platform, Share, Text, View, type ViewToken } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
@@ -11,15 +11,20 @@ import { IconButton } from '@/components/IconButton';
 import { Press } from '@/components/Press';
 import { Canvas } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { Segmented } from '@/components/Segmented';
 import { Sheet } from '@/components/Sheet';
 import { Toggle } from '@/components/Toggle';
 import { Txt } from '@/components/Txt';
 import { BASMALA } from '@/data/basmala';
 import { SURAHS } from '@/data/surahs';
 import { dayKey, wallDay } from '@/lib/dates';
-import { type Ayah, ayahAudioUrl, surahMeta, useSurah } from '@/features/quran/data';
+import { type Ayah, type WordSurah, surahMeta, useSurah, useSurahWords } from '@/features/quran/data';
+import { localAyahUri } from '@/features/quran/offline';
 import { useQuranProgress } from '@/features/quran/progress';
-import { useSettings } from '@/features/settings/store';
+import { ayahAudioUrl, reciterById } from '@/features/quran/reciters';
+import { GROUPS, type TajweedGroup, parseTajweed } from '@/features/quran/tajweed';
+import { TafsirSheet } from '@/features/quran/TafsirSheet';
+import { type ReaderView, useSettings } from '@/features/settings/store';
 import { fonts } from '@/theme/fonts';
 import { GUTTER } from '@/theme/tokens';
 import { useT } from '@/i18n';
@@ -41,16 +46,72 @@ function useReadingTimer() {
   }, [addReading, tz]);
 }
 
+type WordAyah = WordSurah['a'][number];
+
+/** The ayah's Arabic with tajweed rules drawn as marks: grey = not pronounced, underline = nasal sounds,
+ *  highlight = elongation, both = qalqalah. Monochrome to match the app. */
+function TajweedText({ marked, size, number }: { marked: string; size: number; number: number }) {
+  const t = useTheme();
+  const style = (g?: TajweedGroup) =>
+    g === 'silent'
+      ? { color: t.textMuted }
+      : g === 'nasal'
+        ? { textDecorationLine: 'underline' as const }
+        : g === 'madd'
+          ? { backgroundColor: t.pill }
+          : g === 'qalqalah'
+            ? { textDecorationLine: 'underline' as const, backgroundColor: t.pill }
+            : undefined;
+  return (
+    <Txt variant="quran" style={{ fontSize: size, lineHeight: Math.round(size * 2.1) }}>
+      {parseTajweed(marked).map((seg, i) => (
+        <Text key={i} style={style(seg.group)}>
+          {seg.text}
+        </Text>
+      ))}{' '}
+      <Txt style={{ fontFamily: fonts.quran, fontSize: size * 0.9 }}>{'۝' + toArabicDigits(number)}</Txt>
+    </Txt>
+  );
+}
+
+/** Each word with its transliteration and meaning beneath it, read right to left. */
+function WordGrid({ words, lang }: { words: WordAyah['w']; lang: 'bn' | 'en' }) {
+  const t = useTheme();
+  return (
+    <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 10, justifyContent: 'flex-start' }}>
+      {words.map(([ar, tr, en, bn], i) => (
+        <View key={i} style={{ alignItems: 'center', gap: 2, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 14, backgroundColor: t.pill, maxWidth: 130 }}>
+          <Txt variant="quran" style={{ fontSize: 26, lineHeight: 58, paddingBottom: 4 }}>
+            {ar}
+          </Txt>
+          <Txt variant="micro" tone="muted" style={{ fontStyle: 'italic', textAlign: 'center' }}>
+            {tr}
+          </Txt>
+          <Txt variant="caption" tone="soft" style={{ textAlign: 'center' }}>
+            {lang === 'bn' ? bn : en}
+          </Txt>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function AyahRow({
   surah,
   ayah,
   playing,
   onPlay,
+  view,
+  words,
+  onTafsir,
 }: {
   surah: number;
   ayah: Ayah;
   playing: boolean;
   onPlay: () => void;
+  view: ReaderView;
+  words?: WordAyah;
+  onTafsir: () => void;
 }) {
   const t = useTheme();
   const L = useT();
@@ -84,6 +145,9 @@ function AyahRow({
         <Press hitSlop={10} scaleTo={0.82} accessibilityRole="button" accessibilityLabel={playing ? L.t('reader.stop') : L.t('reader.play', { n: ayah.n })} onPress={onPlay}>
           <Icon name={playing ? 'pause' : 'play'} size={18} color={t.text} />
         </Press>
+        <Press hitSlop={10} scaleTo={0.82} accessibilityRole="button" accessibilityLabel={L.t('reader.tafsir')} onPress={onTafsir} style={{ marginLeft: 14 }}>
+          <Icon name="library" size={18} color={t.text} />
+        </Press>
         <Press
           hitSlop={10}
           scaleTo={0.82}
@@ -111,9 +175,15 @@ function AyahRow({
         </Press>
       </View>
 
-      <Txt variant="quran" style={{ fontSize: q.arabicSize, lineHeight: Math.round(q.arabicSize * 2.1) }}>
-        {ayah.ar} <Txt style={{ fontFamily: fonts.quran, fontSize: q.arabicSize * 0.9 }}>{'۝' + toArabicDigits(ayah.n)}</Txt>
-      </Txt>
+      {view === 'tajweed' && words ? (
+        <TajweedText marked={words.t} size={q.arabicSize} number={ayah.n} />
+      ) : view === 'words' && words ? (
+        <WordGrid words={words.w} lang={L.lang === 'bn' ? 'bn' : 'en'} />
+      ) : (
+        <Txt variant="quran" style={{ fontSize: q.arabicSize, lineHeight: Math.round(q.arabicSize * 2.1) }}>
+          {ayah.ar} <Txt style={{ fontFamily: fonts.quran, fontSize: q.arabicSize * 0.9 }}>{'۝' + toArabicDigits(ayah.n)}</Txt>
+        </Txt>
+      )}
       {q.showTranslit && (
         <Txt variant="body" tone="muted" style={{ fontStyle: 'italic' }}>
           {ayah.tr}
@@ -151,7 +221,11 @@ export default function ReaderScreen() {
   const q = useSettings((s) => s.quran);
   const setSettings = useSettings((s) => s.set);
   const setLastRead = useQuranProgress((s) => s.setLastRead);
+  const reciter = useSettings((s) => s.reciter);
+  const view = useSettings((s) => s.readerView);
+  const words = useSurahWords(n, view !== 'normal');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [tafsirAyah, setTafsirAyah] = useState<number | null>(null);
   const listRef = useRef<FlatList<Ayah>>(null);
   useReadingTimer();
 
@@ -175,10 +249,10 @@ export default function ReaderScreen() {
         player.pause();
         return;
       }
-      player.replace({ uri: ayahAudioUrl(n, ayah) });
+      player.replace({ uri: localAyahUri(reciter, n, ayah) ?? ayahAudioUrl(n, ayah, reciter) });
       player.play();
     },
-    [player, n],
+    [player, n, reciter],
   );
 
   // When an ayah finishes, continue with the next one (and keep it in view).
@@ -302,8 +376,17 @@ export default function ReaderScreen() {
           ref={listRef}
           data={data?.ayahs ?? []}
           keyExtractor={(a) => String(a.n)}
+          extraData={`${view}-${words ? 1 : 0}`}
           renderItem={({ item }) => (
-            <AyahRow surah={n} ayah={item} playing={playingAyah === item.n} onPlay={() => play(playingAyah === item.n ? null : item.n)} />
+            <AyahRow
+              surah={n}
+              ayah={item}
+              playing={playingAyah === item.n}
+              onPlay={() => play(playingAyah === item.n ? null : item.n)}
+              view={view}
+              words={words?.a[item.n - 1]}
+              onTafsir={() => setTafsirAyah(item.n)}
+            />
           )}
           ListHeaderComponent={header}
           ListFooterComponent={data ? footer : <ActivityIndicator color={t.textMuted} style={{ marginTop: 40 }} />}
@@ -319,7 +402,54 @@ export default function ReaderScreen() {
         />
       )}
 
+      <TafsirSheet surah={n} ayah={tafsirAyah} onClose={() => setTafsirAyah(null)} />
+
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={L.t('reader.settings')}>
+        <Glass radius={22} padding={16} style={{ gap: 12 }}>
+          <Segmented<ReaderView>
+            value={view}
+            onChange={(readerView) => setSettings({ readerView })}
+            options={[
+              { value: 'normal', label: L.t('reader.viewNormal') },
+              { value: 'tajweed', label: L.t('reader.viewTajweed') },
+              { value: 'words', label: L.t('reader.viewWords') },
+            ]}
+          />
+          {view === 'tajweed' && (
+            <View style={{ gap: 4 }}>
+              {GROUPS.map((g) => (
+                <Txt key={g} variant="caption" tone="soft">
+                  {L.t(`reader.tj.${g}`)}
+                </Txt>
+              ))}
+              <Txt variant="micro" tone="muted">
+                {L.t('reader.tjSource')}
+              </Txt>
+            </View>
+          )}
+          {view === 'words' && (
+            <Txt variant="micro" tone="muted">
+              {L.t('reader.wordsSource')}
+            </Txt>
+          )}
+          <Press
+            onPress={() => {
+              setSheetOpen(false);
+              router.push('/recitation');
+            }}
+            accessibilityRole="button"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4 }}
+          >
+            <Icon name="volume" size={18} color={t.text} />
+            <View style={{ flex: 1 }}>
+              <Txt variant="bodyStrong">{L.t('reader.reciter')}</Txt>
+              <Txt variant="caption" tone="muted">
+                {L.lang === 'bn' ? reciterById(reciter).nameBn : reciterById(reciter).name}
+              </Txt>
+            </View>
+            <Icon name="chevronRight" size={17} color={t.textMuted} />
+          </Press>
+        </Glass>
         <Glass radius={22} padding={16} style={{ gap: 14 }}>
           {(
             [

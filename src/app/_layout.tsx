@@ -13,6 +13,8 @@ import { useRamadan } from '@/features/ramadan/store';
 import { useRewards } from '@/features/rewards/store';
 import { useTasbih } from '@/features/tasbih/store';
 import { useZakat } from '@/features/zakat/store';
+import { useCare } from '@/features/care/store';
+import { useJamaat } from '@/features/jamaat/store';
 import { usePrayerLog } from '@/features/prayer/log';
 import { reschedulePrayerAlerts } from '@/features/prayer/notifications';
 import { useQuranProgress } from '@/features/quran/progress';
@@ -32,7 +34,7 @@ function useStoresReady() {
   useEffect(() => {
     // Every persisted store must be loaded before the first screen renders, so nothing flashes empty
     // and no early write can overwrite saved data.
-    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta, usePlusStore, useGiving].map(whenHydrated)).then(() => {
+    Promise.all([useSettings, usePrayerLog, useQuranProgress, useJournal, useFasting, useTasbih, useZakat, useSavedDuas, useRamadan, useRewards, useSyncMeta, usePlusStore, useGiving, useCare, useJamaat].map(whenHydrated)).then(() => {
       seedDemoData();
       setReady(true);
     });
@@ -74,11 +76,15 @@ function usePrayerAlerts(enabled: boolean) {
     const unsubscribeRamadan = useRamadan.subscribe((r, prev) => {
       if (r.sehriMargin !== prev.sehriMargin || r.sehriReminder !== prev.sehriReminder || r.iftarAlert !== prev.iftarAlert) plan();
     });
+    const unsubscribeJamaat = useJamaat.subscribe((j, prev) => {
+      if (j.mosque !== prev.mosque || j.alertBefore !== prev.alertBefore) plan();
+    });
     const appState = AppState.addEventListener('change', (state) => state === 'active' && plan());
     return () => {
       clearTimeout(timer);
       unsubscribe();
       unsubscribeRamadan();
+      unsubscribeJamaat();
       appState.remove();
     };
   }, [enabled]);

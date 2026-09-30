@@ -22,6 +22,8 @@ export type RewardData = {
   journalDays: string[];
   fasts: Record<string, FastState>;
   juzRead: Record<string, boolean>;
+  /** excused and grace days: they neither break nor extend the prayer streak */
+  skip?: string[];
 };
 
 export type StreakKind = 'prayer' | 'quran' | 'dhikr' | 'journal';
@@ -64,7 +66,7 @@ export function computeStats(d: RewardData): Stats {
 
   return {
     streaks: {
-      prayer: streakOf(keysWhere(d.prayers, (p) => p.length >= 5), d.today),
+      prayer: streakOf(keysWhere(d.prayers, (p) => p.length >= 5), d.today, d.skip),
       quran: streakOf(keysWhere(d.reading, (s) => s >= 60), d.today),
       dhikr: streakOf(keysWhere(d.dhikr, (n) => n > 0), d.today),
       journal: streakOf(d.journalDays, d.today),

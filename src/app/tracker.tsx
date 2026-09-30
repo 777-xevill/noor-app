@@ -9,9 +9,12 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { Screen } from '@/components/Screen';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Segmented } from '@/components/Segmented';
+import { Toggle } from '@/components/Toggle';
 import { Txt } from '@/components/Txt';
 import { type DayParts, dayKey, daysBetween, daysInMonth } from '@/lib/dates';
 import { useT } from '@/i18n';
+import { canFreeze, freezesLeft } from '@/features/care/rules';
+import { useCare } from '@/features/care/store';
 import { type FastState, useFasting } from '@/features/fasting/store';
 import { usePrayerLog } from '@/features/prayer/log';
 import { PRAYER_ICON } from '@/features/prayer/PrayerIcon';
@@ -34,6 +37,13 @@ export default function TrackerScreen() {
   const togglePrayer = usePrayerLog((s) => s.toggle);
   const fasts = useFasting((s) => s.days);
   const setFast = useFasting((s) => s.setDay);
+  const womensMode = useCare((s) => s.womensMode);
+  const excused = useCare((s) => s.excused);
+  const freezes = useCare((s) => s.freezes);
+  const toggleExcused = useCare((s) => s.toggleExcused);
+  const freeze = useCare((s) => s.freeze);
+  const unfreeze = useCare((s) => s.unfreeze);
+  const todayKey = dayKey(today);
 
   const selKey = dayKey(selected);
   const selDone = prayerDays[selKey] ?? EMPTY;
@@ -48,6 +58,7 @@ export default function TrackerScreen() {
     const day = { y: view.y, m: view.m, d };
     if (daysBetween(today, day) > 0) break;
     const k = dayKey(day);
+    if (excused[k]) continue;
     kept += prayerDays[k]?.length ?? 0;
     possible += 5;
     if (fasts[k] === 'fasted') fasted++;
@@ -119,7 +130,11 @@ export default function TrackerScreen() {
         renderMark={(day) => {
           const k = dayKey(day);
           if (daysBetween(today, day) > 0) return null;
-          if (mode === 'prayers') return <ProgressRing size={14} stroke={2} progress={(prayerDays[k]?.length ?? 0) / 5} color={t.ink} track={t.track} />;
+          if (mode === 'prayers') {
+            if (excused[k]) return <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: t.lineStrong }} />;
+            if (freezes[k]) return <Icon name="shield" size={13} color={t.textMuted} />;
+            return <ProgressRing size={14} stroke={2} progress={(prayerDays[k]?.length ?? 0) / 5} color={t.ink} track={t.track} />;
+          }
           const f = fasts[k];
           return f ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: f === 'fasted' ? t.ink : 'transparent', borderWidth: 1.5, borderColor: t.ink }} /> : null;
         }}
@@ -130,6 +145,10 @@ export default function TrackerScreen() {
         {isFuture ? (
           <Txt variant="body" tone="muted">
             {L.t('tracker.future')}
+          </Txt>
+        ) : mode === 'prayers' && excused[selKey] ? (
+          <Txt variant="body" tone="soft">
+            {L.t('care.excusedNote')}
           </Txt>
         ) : mode === 'prayers' ? (
           PRAYERS.map(({ key }) => {
@@ -177,6 +196,43 @@ export default function TrackerScreen() {
               { value: 'missed', label: L.t('fast.missed') },
             ]}
           />
+        )}
+        {!isFuture && mode === 'prayers' && womensMode && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 6, borderTopWidth: 1, borderTopColor: t.line }}>
+            <View style={{ flex: 1 }}>
+              <Txt variant="bodyStrong">{L.t('care.excusedDay')}</Txt>
+              <Txt variant="caption" tone="muted">
+                {L.t('care.excusedSub')}
+              </Txt>
+            </View>
+            <Toggle label={L.t('care.excusedDay')} value={!!excused[selKey]} onChange={() => toggleExcused(selKey)} />
+          </View>
+        )}
+        {!isFuture && mode === 'prayers' && freezes[selKey] && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 6, borderTopWidth: 1, borderTopColor: t.line }}>
+            <Icon name="shield" size={18} color={t.textSoft} />
+            <Txt variant="body" tone="soft" style={{ flex: 1 }}>
+              {L.t('care.graceUsed')}
+            </Txt>
+            <Press onPress={() => unfreeze(selKey)} accessibilityRole="button" hitSlop={8}>
+              <Txt variant="caption" tone="soft">
+                {L.t('care.graceUndo')}
+              </Txt>
+            </Press>
+          </View>
+        )}
+        {!isFuture && mode === 'prayers' && !freezes[selKey] && selDone.length < 5 && canFreeze(freezes, excused, selKey, todayKey) && (
+          <Press onPress={() => freeze(selKey, todayKey)} accessibilityRole="button" style={{ paddingTop: 6, borderTopWidth: 1, borderTopColor: t.line }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Icon name="shield" size={18} color={t.text} />
+              <View style={{ flex: 1 }}>
+                <Txt variant="bodyStrong">{L.t('care.useGrace')}</Txt>
+                <Txt variant="caption" tone="muted">
+                  {L.t('care.graceLeft', { n: L.num(freezesLeft(freezes, selKey)) })}
+                </Txt>
+              </View>
+            </View>
+          </Press>
         )}
       </Glass>
     </Screen>

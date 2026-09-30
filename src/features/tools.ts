@@ -38,6 +38,14 @@ const T = {
   donate: tool('donate', 'handCoins', '/donate'),
   plus: tool('plus', 'sparkles', '/plus'),
   account: tool('account', 'cloud', '/settings/account'),
+  recitation: tool('recitation', 'volume', '/recitation'),
+  hajj: tool('hajj', 'kaaba', '/hajj'),
+  qada: tool('qada', 'repeat', '/qada'),
+  hifz: tool('hifz', 'target', '/hifz'),
+  circle: tool('circle', 'users', '/circle'),
+  lectures: tool('lectures', 'headphones', '/lectures'),
+  hadith: tool('hadith', 'scroll', '/hadith'),
+  kids: tool('kids', 'star', '/kids'),
 };
 
 /** The everyday tools, in the order they appear on Home. */
@@ -45,9 +53,9 @@ export const CORE_TOOLS: Tool[] = [T.qibla, T.quran, T.duas, T.tasbih, T.journal
 
 // Even counts per group so every row pairs up. Titles are translation keys.
 export const TOOL_GROUPS: { title: Key; tools: Tool[] }[] = [
-  { title: 'group.worship', tools: [T.prayers, T.timetable, T.quran, T.qibla, T.mosques, T.duas, T.tasbih, T.ramadan] },
-  { title: 'group.track', tools: [T.journal, T.tracker, T.milestones, T.calendar] },
-  { title: 'group.community', tools: [T.ask, T.community, T.donate, T.cards] },
-  { title: 'group.learn', tools: [T.learn, T.names, T.shahadah, T.greetings] },
+  { title: 'group.worship', tools: [T.prayers, T.timetable, T.quran, T.recitation, T.qibla, T.mosques, T.duas, T.tasbih, T.ramadan, T.hajj] },
+  { title: 'group.track', tools: [T.journal, T.tracker, T.qada, T.hifz, T.milestones, T.calendar] },
+  { title: 'group.community', tools: [T.ask, T.community, T.circle, T.donate, T.cards, T.lectures] },
+  { title: 'group.learn', tools: [T.learn, T.hadith, T.kids, T.names, T.shahadah, T.greetings] },
   { title: 'group.more', tools: [T.zakat, T.account, T.plus, T.settings] },
 ];

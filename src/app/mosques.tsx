@@ -15,6 +15,7 @@ import { fromDayKey } from '@/lib/dates';
 import { type I18n, useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
 import { DEMO_ENABLED } from '@/features/demo/seed';
+import { MosqueJamaat } from '@/features/jamaat/MosqueJamaat';
 import { DEMO_SNAPSHOT } from '@/features/places/demoSnapshot';
 import { distanceLabel, placeName } from '@/features/places/format';
 import { findPlaces, type Place, type PlaceKind, toPlaces } from '@/features/places/overpass';
@@ -264,6 +265,7 @@ export default function MosquesScreen() {
                 </Txt>
               </View>
             </Press>
+            {picked.kind === 'mosque' && <MosqueJamaat place={picked} />}
             <Press
               onPress={() => Linking.openURL(`https://www.openstreetmap.org/${picked.id}`).catch(() => {})}
               accessibilityRole="link"

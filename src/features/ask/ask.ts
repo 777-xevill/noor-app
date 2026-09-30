@@ -11,6 +11,8 @@ import { type Passage, search } from './search';
 const DIRECT_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY;
 
 export const askEnabled = supabase !== null || !!DIRECT_KEY;
+// A test key, when set, wins over the server, so Ask works locally before the function is deployed.
+const useServer = !DIRECT_KEY && supabase !== null;
 
 export class AskError extends Error {
   constructor(public code: 'off' | 'signin' | 'limit' | 'network') {
@@ -49,7 +51,7 @@ export async function askNoor(question: string, lang: Lang, onStage: (s: AskStag
   if (!askEnabled) throw new AskError('off');
   onStage('searching');
   const [keywordReply, index] = await Promise.all([
-    supabase ? viaServer({ phase: 'keywords', question }) : direct(keywordMessages(question), KEYWORD_OPTIONS),
+    useServer ? viaServer({ phase: 'keywords', question }) : direct(keywordMessages(question), KEYWORD_OPTIONS),
     loadCorpus(),
   ]);
   const passages = search(index, [...parseKeywords(keywordReply), question], 8);
@@ -60,7 +62,7 @@ export async function askNoor(question: string, lang: Lang, onStage: (s: AskStag
     tag: p.tag,
     text: `(${p.surah ? `Surah ${SURAHS[p.surah - 1].name}` : `Hisnul Muslim: ${p.chapter}`}) ${lang === 'bn' && p.bn ? p.bn : p.en}`,
   }));
-  const reply = supabase
+  const reply = useServer
     ? await viaServer({ phase: 'answer', question, lang, sources: forModel })
     : await direct(answerMessages(question, lang, forModel), ANSWER_OPTIONS);
   const { text, cited } = cleanAnswer(reply, passages.map((p) => p.tag));

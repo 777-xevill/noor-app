@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { dayKey } from '@/lib/dates';
+import { skipDays } from '@/features/care/rules';
+import { useCare } from '@/features/care/store';
 import { useFasting } from '@/features/fasting/store';
 import { hasContent, useJournal } from '@/features/journal/store';
 import { usePrayerLog } from '@/features/prayer/log';
@@ -22,13 +24,15 @@ export function useMilestones() {
   const journal = useJournal((s) => s.entries);
   const fasts = useFasting((s) => s.days);
   const juzRead = useRamadan((s) => s.juzRead);
+  const excused = useCare((s) => s.excused);
+  const freezes = useCare((s) => s.freezes);
   const earned = useRewards((s) => s.earned);
   const unseen = useRewards((s) => s.unseen);
   const record = useRewards((s) => s.record);
 
   const stats = useMemo(
-    () => computeStats({ today, hijriOffset, prayers, reading, dhikr, journalDays: Object.keys(journal).filter((k) => hasContent(journal[k])), fasts, juzRead }),
-    [today, hijriOffset, prayers, reading, dhikr, journal, fasts, juzRead],
+    () => computeStats({ today, hijriOffset, prayers, reading, dhikr, journalDays: Object.keys(journal).filter((k) => hasContent(journal[k])), fasts, juzRead, skip: skipDays(excused, freezes) }),
+    [today, hijriOffset, prayers, reading, dhikr, journal, fasts, juzRead, excused, freezes],
   );
 
   const reached = MILESTONES.filter((m) => m.measure(stats) >= m.target && !earned[m.id]).map((m) => m.id);

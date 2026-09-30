@@ -29,6 +29,7 @@ export type PrayerPrefs = {
 export type QuranPrefs = { showTranslit: boolean; showEnglish: boolean; showBangla: boolean; arabicSize: number };
 
 export type DarkStyle = 'graphite' | 'midnight';
+export type ReaderView = 'normal' | 'tajweed' | 'words';
 
 export type SettingsState = PrayerPrefs & {
   themeMode: ThemeMode;
@@ -44,6 +45,9 @@ export type SettingsState = PrayerPrefs & {
   /** Extra reminder this many minutes before each alerted prayer (0 = none). */
   reminderBefore: number;
   quran: QuranPrefs;
+  /** everyayah.com folder of the chosen reciter */
+  reciter: string;
+  readerView: ReaderView;
 
   set: (patch: Partial<Omit<SettingsState, 'set' | 'setLocation' | 'setThemeMode' | 'setDisplayName'>>) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -70,6 +74,8 @@ const DEFAULTS = {
   alerts: { fajr: 'sound', dhuhr: 'sound', asr: 'sound', maghrib: 'sound', isha: 'sound' } as Record<AlertPrayer, AlertKind>,
   reminderBefore: 0,
   quran: { showTranslit: false, showEnglish: true, showBangla: true, arabicSize: 30 } as QuranPrefs,
+  reciter: 'Alafasy_128kbps',
+  readerView: 'normal' as ReaderView,
 };
 
 export const useSettings = create<SettingsState>()(

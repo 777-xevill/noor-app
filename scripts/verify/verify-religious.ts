@@ -22,6 +22,21 @@ import type { CalcMethod, PrayerLocation } from '../../src/features/prayer/locat
 import { prayerTimesFor } from '../../src/features/prayer/times';
 import { computeStats } from '../../src/features/rewards/milestones';
 import { streakOf } from '../../src/features/rewards/streaks';
+import { FREEZES_PER_MONTH, addMissedDays, canFreeze, freezesLeft, qadaTotal, skipDays } from '../../src/features/care/rules';
+import { NAWAWI } from '../../src/data/nawawi';
+import { HADITH_BOOKS } from '../../src/data/hadithIndex';
+import { hadithOfTheDay } from '../../src/features/hadith/daily';
+import { mergeEditions } from '../../src/features/hadith/merge';
+import { tafsirToText } from '../../src/features/quran/tafsirText';
+import { RULE_GROUP, parseTajweed, stripTajweed } from '../../src/features/quran/tajweed';
+import { RECITERS, DEFAULT_RECITER, ayahAudioUrl } from '../../src/features/quran/reciters';
+import { INTERVALS, newItem, review as hifzReview } from '../../src/features/hifz/srs';
+import { jamaatAt, sanitizeTimes, wallTime } from '../../src/features/jamaat/rules';
+import { isValidCode, juzStates, normalizeCode } from '../../src/features/circle/rules';
+import { ALPHABET } from '../../src/data/alphabet';
+import { CHECKLIST, HAJJ, HAJJ_REVIEWED, UMRAH } from '../../src/data/hajj';
+import { KIDS_DUAS, KIDS_REVIEWED, KIDS_SALAH } from '../../src/data/kidsSalah';
+import { CHANNELS } from '../../src/features/lectures/channels';
 import { widgetSnapshot, widgetTimeline } from '../../src/features/widget/snapshot';
 import { mergeSyncData, type SyncData } from '../../src/features/sync/merge';
 
@@ -355,10 +370,136 @@ async function main() {
     ['giving: Zakat paid this year counts only this year, kind and currency', totalGiven(giftsLog, 'zakat', 'BDT', hy.from, hy.to) === 500],
   );
 
+  // Streaks: excused days and grace days bridge a streak without adding to it or creating one.
+  const dk = (n: number) => dayKey(addDays(today, -n));
+  const bridged = streakOf([dk(1), dk(3), dk(4)], today, [dk(2)]);
+  const skipCases: [string, boolean][] = [
+    ['streak: a covered day bridges two runs', bridged.current === 3 && bridged.best === 3 && streakOf([dk(1), dk(3), dk(4)], today).current === 1],
+    ['streak: covered days alone make no streak', streakOf([], today, [dk(1), dk(2)]).current === 0],
+    ['streak: an excused today keeps the run going', streakOf(run, today, [dayKey(today)]).current === 3],
+    ['streak: best run bridges a covered gap', streakOf([dk(10), dk(8)], today, [dk(9)]).best === 2],
+  ];
+  const oneFreeze: Record<string, true> = { '2026-09-10': true };
+  const twoFreezes: Record<string, true> = { '2026-09-10': true, '2026-09-11': true };
+  const careChecks: [string, boolean][] = [
+    ['care: two grace days a month', FREEZES_PER_MONTH === 2 && freezesLeft(oneFreeze, '2026-09-20') === 1 && freezesLeft(twoFreezes, '2026-09-20') === 0 && freezesLeft(twoFreezes, '2026-10-02') === 2],
+    ['care: grace days only cover a past day not already covered', canFreeze(oneFreeze, {}, '2026-09-12', '2026-09-29') && !canFreeze(oneFreeze, {}, '2026-09-29', '2026-09-29') && !canFreeze(oneFreeze, {}, '2026-09-10', '2026-09-29') && !canFreeze(oneFreeze, { '2026-09-12': true }, '2026-09-12', '2026-09-29') && !canFreeze(twoFreezes, {}, '2026-09-12', '2026-09-29')],
+    ['care: excused and grace days combine without repeats', skipDays({ a: true, b: true }, { b: true, c: true }).sort().join() === 'a,b,c'],
+    ['care: missed days add to all five prayers', qadaTotal(addMissedDays({ fajr: 1, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }, 3)) === 16 && qadaTotal(addMissedDays({ fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }, -4)) === 0],
+  ];
+
+  // Hadith library: the bundled Forty Hadith, the book index, the daily pick and the section merge.
+  const merged = mergeEditions(
+    { hadiths: [{ hadithnumber: 2, text: 'ar2' }, { hadithnumber: 1, text: 'ar1' }] },
+    { hadiths: [{ hadithnumber: 1, text: 'en1', grades: [{ name: 'X', grade: 'Sahih' }] }] },
+    { hadiths: [{ hadithnumber: 3, text: ' bn3 ' }, { hadithnumber: 1, text: '' }] },
+  );
+  const hadithChecks: [string, boolean][] = [
+    ['hadith: an-Nawawi has 42 hadith in Arabic, English and Bangla, and the first is about intentions', NAWAWI.length === 42 && NAWAWI.every((h, i) => h.n === i + 1 && h.ar && h.en && h.bn) && letters(NAWAWI[0].ar).includes(letters('بِالنِّيَّاتِ'))],
+    ['hadith: eight books, Bukhari ends at 7563 and Nawawi at 42', HADITH_BOOKS.length === 8 && HADITH_BOOKS.find((b) => b.id === 'bukhari')!.sections.at(-1)!.last === 7563 && HADITH_BOOKS.find((b) => b.id === 'nawawi')!.sections.at(-1)!.last === 42 && HADITH_BOOKS.every((b) => b.sections.every((sec, i, all) => sec.first <= sec.last && (i === 0 || sec.n > all[i - 1].n)))],
+    ['hadith: the hadith of the day cycles through all 42 and repeats after 42 days', hadithOfTheDay('2026-01-01').n === 1 && hadithOfTheDay('2026-02-12').n === 1 && hadithOfTheDay('2026-09-29').n !== hadithOfTheDay('2026-09-30').n && new Set(Array.from({ length: 42 }, (_, i) => hadithOfTheDay(dayKey(addDays({ y: 2026, m: 4, d: 1 }, i))).n)).size === 42],
+    ['hadith: editions join by number; grades come from the English edition; blanks dropped', merged.length === 3 && merged[0].n === 1 && merged[0].ar === 'ar1' && merged[0].en === 'en1' && merged[0].grades?.[0].grade === 'Sahih' && merged[0].bn === undefined && merged[2].bn === 'bn3'],
+    ['tafsir: HTML becomes plain paragraphs with entities decoded', tafsirToText('<p>a &amp; b</p><p><b>[1]</b>&nbsp;c<br/>d</p>') === 'a & b\n\n[1] c\nd'],
+  ];
+
+  // Whole-Quran word by word and tajweed: every ayah's tajweed text is the Tanzil text with rules laid over it,
+  // and the words spell it letter for letter (a few ayahs are spelled with one letter differently by the two sources).
+  const hamzaSkeleton = (text: string) =>
+    letters(text)
+      .replace(/[أإ]/g, 'ا')
+      .replace(/ؤ/g, 'و')
+      .replace(/[ئى]/g, 'ي')
+      .replace(/ء/g, '');
+  const editDistance = (a: string, b: string) => {
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array<number>(b.length).fill(0)]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  };
+  let wbwWords = 0;
+  let ayahCount = 0;
+  let tajweedExact = true;
+  let tajweedCodesOk = true;
+  let wordsExact = 0;
+  let wordsNear = 0;
+  let wordsBad = 0;
+  for (let n = 1; n <= 114; n++) {
+    const tz = JSON.parse(readFileSync(join(root, `assets/data/quran/${n}.qdata`), 'utf8')) as { ayahs: { n: number; ar: string }[] };
+    const ww = JSON.parse(readFileSync(join(root, `assets/data/wbw/${n}.qdata`), 'utf8')) as { a: { n: number; w: string[][]; t: string }[] };
+    if (ww.a.length !== tz.ayahs.length) wordsBad++;
+    for (const a of ww.a) {
+      const src = tz.ayahs.find((x) => x.n === a.n)?.ar ?? '';
+      ayahCount++;
+      wbwWords += a.w.length;
+      if (stripTajweed(a.t) !== src) tajweedExact = false;
+      for (const m of a.t.matchAll(/<([a-z])>/g)) if (!(m[1] in RULE_GROUP)) tajweedCodesOk = false;
+      if (!parseTajweed(a.t).length) tajweedCodesOk = false;
+      const mine = hamzaSkeleton(a.w.map((w) => w[0]).join(''));
+      const theirs = hamzaSkeleton(src);
+      if (mine === theirs) wordsExact++;
+      else if (Math.abs(mine.length - theirs.length) <= 1 && editDistance(mine, theirs) <= 2) wordsNear++;
+      else wordsBad++;
+    }
+  }
+  const quranChecks: [string, boolean][] = [
+    ['quran-words: 6236 ayahs and 77,429 words, all 114 surahs', ayahCount === 6236 && wbwWords === 77429],
+    ['quran-words: every ayah’s words spell the Tanzil text (at most 5 one-letter spelling differences between sources)', wordsBad === 0 && wordsNear <= 5 && wordsExact + wordsNear === 6236],
+    ['quran-tajweed: removing the rule marks gives back the Tanzil text exactly, in every ayah', tajweedExact],
+    ['quran-tajweed: every rule code is a known rule', tajweedCodesOk],
+    ['recitation: twelve reciters, Alafasy is the default, ayah audio URLs are everyayah.com file names', RECITERS.length === 12 && new Set(RECITERS.map((r) => r.id)).size === 12 && RECITERS.some((r) => r.id === DEFAULT_RECITER) && ayahAudioUrl(2, 255, DEFAULT_RECITER) === 'https://everyayah.com/data/Alafasy_128kbps/002255.mp3' && ayahAudioUrl(114, 6, 'Husary_128kbps').endsWith('/114006.mp3')],
+  ];
+
+  // Hifz: revise tomorrow, then after 3 days, a week, two weeks and a month; a struggle starts the ladder again.
+  const t0 = '2026-09-29';
+  let h = newItem(2, 255, 255, t0);
+  const gaps: number[] = [];
+  for (let i = 0; i < 6; i++) {
+    h = hifzReview(h, true, h.due);
+    gaps.push(Math.round((Date.parse(h.due) - Date.parse(h.last!)) / 86_400_000));
+  }
+  const struggled = hifzReview({ ...h, reviews: 4 }, false, t0);
+  const hifzChecks: [string, boolean][] = [
+    ['hifz: gaps grow 1, 3, 7, 14, 30 days and stay at 30', INTERVALS.join() === '1,3,7,14,30' && gaps.join() === '1,3,7,14,30,30'],
+    ['hifz: a new passage is due today; one you struggled with returns tomorrow at the start of the ladder', newItem(1, 1, 7, t0).due === t0 && struggled.reviews === 0 && struggled.due === '2026-09-30'],
+  ];
+
+  // Mosque jamaat: clock times are read in the mosque's own zone; times from a server are cleaned before use.
+  const dhakaDay: DayParts = { y: 2026, m: 8, d: 29 };
+  const adhanAt = new Date('2026-09-29T10:00:00Z');
+  const dirty = sanitizeTimes({ fajr: { kind: 'fixed', at: '05:15' }, dhuhr: { kind: 'fixed', at: '25:00' }, asr: { kind: 'after', minutes: 500 }, maghrib: { kind: 'after', minutes: 0 }, isha: { kind: 'nope' }, sunrise: { kind: 'fixed', at: '06:00' } });
+  const jamaatChecks: [string, boolean][] = [
+    ['jamaat: 05:15 in Dhaka (UTC+6) is 23:15 UTC the evening before, and 13:30 in New York (EDT) is 17:30 UTC', wallTime(dhakaDay, '05:15', 'Asia/Dhaka').toISOString() === '2026-09-28T23:15:00.000Z' && wallTime(dhakaDay, '13:30', 'America/New_York').toISOString() === '2026-09-29T17:30:00.000Z'],
+    ['jamaat: "20 minutes after the adhan" and a fixed time', jamaatAt({ kind: 'after', minutes: 20 }, adhanAt, dhakaDay, 'Asia/Dhaka').toISOString() === '2026-09-29T10:20:00.000Z' && jamaatAt({ kind: 'fixed', at: '16:00' }, adhanAt, dhakaDay, 'Asia/Dhaka').toISOString() === '2026-09-29T10:00:00.000Z'],
+    ['jamaat: bad times are dropped and minutes are kept within 1 to 90', Object.keys(dirty).join() === 'fajr,asr,maghrib' && (dirty.asr as { minutes: number }).minutes === 90 && (dirty.maghrib as { minutes: number }).minutes === 1],
+  ];
+
+  // Family circles: codes avoid look-alike characters; a circle's 30 juz show free, taken and finished.
+  const claims = [{ juz: 1, by: 'A', mine: true, done: true }, { juz: 2, by: 'B', mine: false, done: false }, { juz: 3, by: 'C', mine: false, done: true }, { juz: 4, by: 'A', mine: true, done: false }];
+  const st = juzStates(claims);
+  const circleChecks: [string, boolean][] = [
+    ['circle: codes are 6 letters or digits without 0, 1, I or O', normalizeCode(' ab-c d2e3 ') === 'ABCD2E3' && isValidCode('AB2C3D') && !isValidCode('AB0C3D') && !isValidCode('ABIC3D') && !isValidCode('AB2C3') && !isValidCode('ab2c3d')],
+    ['circle: 30 juz show free, taken, finished and mine', st.length === 30 && st[0] === 'mineDone' && st[1] === 'taken' && st[2] === 'takenDone' && st[3] === 'mine' && st.slice(4).every((x) => x === 'free')],
+  ];
+
+  rewardChecks.push(...skipCases, ...careChecks, ...hadithChecks, ...quranChecks, ...hifzChecks, ...jamaatChecks, ...circleChecks);
+
+  // Hajj, kids and lectures: authored guides stay flagged as unreviewed until a scholar signs off, every dua
+  // they point to is a real Hisnul Muslim chapter, and every step has both languages.
+  const chapterIds = new Set(duaBook.map((c) => (c as unknown as { id: number }).id));
+  const guideSteps = [...UMRAH, ...HAJJ];
+  const extraChecks: [string, boolean][] = [
+    ['hajj: every step has English and Bangla text, and every dua it points to is a Hisnul Muslim chapter', guideSteps.every((x) => x.en && x.bn && x.textEn.length > 40 && x.textBn.length > 40 && (x.duas ?? []).every((id) => chapterIds.has(id))) && UMRAH.length === 4 && HAJJ.length === 6],
+    ['hajj: the guide and kids’ prayer outline are still marked as not reviewed by a scholar', HAJJ_REVIEWED === false && KIDS_REVIEWED === false],
+    ['hajj: checklist items are unique and in both languages', new Set(CHECKLIST.map((c) => c.id)).size === CHECKLIST.length && CHECKLIST.every((c) => c.en && c.bn)],
+    ['kids: 28 distinct Arabic letters, every prayer step in both languages, every dua chapter exists', ALPHABET.length === 28 && new Set(ALPHABET.map((a) => a.letter)).size === 28 && ALPHABET.every((a) => a.letter.length === 1 && a.letter >= '\u0621' && a.letter <= '\u064a' && a.name && a.nameBn) && KIDS_SALAH.every((x) => x.en && x.bn && x.textEn && x.textBn) && KIDS_DUAS.every((d) => chapterIds.has(d.chapter))],
+    ['lectures: every channel is an https YouTube link with a unique id and both languages', new Set(CHANNELS.map((c) => c.id)).size === CHANNELS.length && CHANNELS.every((c) => /^https:\/\/www\.youtube\.com\/@[A-Za-z0-9._-]+$/.test(c.url) && c.about && c.aboutBn)],
+  ];
+  rewardChecks.push(...extraChecks);
+
   for (const [label, ok] of rewardChecks) {
     checks++;
     if (!ok) failures++;
-    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community|ask|giving)/.test(label) ? '' : 'milestones: '}${label}`);
+    console.log(`${ok ? 'ok  ' : 'FAIL'} ${/^(widget|sync|places|lessons|community|ask|giving|streak|care|hadith|tafsir|quran-words|quran-tajweed|recitation|hifz|jamaat|circle|hajj|kids|lectures)/.test(label) ? '' : 'milestones: '}${label}`);
   }
 
   console.log(`\n${checks - failures}/${checks} checks passed`);

@@ -84,6 +84,14 @@ import CloudCheck from 'lucide-react-native/icons/cloud-check';
 import LogOut from 'lucide-react-native/icons/log-out';
 import Mail from 'lucide-react-native/icons/mail';
 import RefreshCw from 'lucide-react-native/icons/refresh-cw';
+import BatteryCharging from 'lucide-react-native/icons/battery-charging';
+import Activity from 'lucide-react-native/icons/activity';
+import Download from 'lucide-react-native/icons/download';
+import Users from 'lucide-react-native/icons/users';
+import Headphones from 'lucide-react-native/icons/headphones';
+import Shuffle from 'lucide-react-native/icons/shuffle';
+import Eye from 'lucide-react-native/icons/eye';
+import EyeOff from 'lucide-react-native/icons/eye-off';
 
 type IconProps = { size?: number; color: string; strokeWidth?: number; fill?: string };
 
@@ -220,6 +228,14 @@ const ICONS = {
   logOut: lucide(LogOut),
   mail: lucide(Mail),
   refresh: lucide(RefreshCw),
+  battery: lucide(BatteryCharging),
+  activity: lucide(Activity),
+  download: lucide(Download),
+  users: lucide(Users),
+  headphones: lucide(Headphones),
+  shuffle: lucide(Shuffle),
+  eye: lucide(Eye),
+  eyeOff: lucide(EyeOff),
   kaaba: Kaaba,
 } satisfies Record<string, ComponentType<IconProps>>;
 
