@@ -59,9 +59,11 @@ and list the sources in `sources` as `[{ "title": "Sahih al-Bukhari 1", "url": "
 Run `migrations/0003_community.sql`. The app reads the `dua_feed` view and writes only through
 checked functions, so nobody can see who wrote an anonymous request.
 
-**Moderation.** Three reports hide a request automatically. To review one:
+**Moderation.** Three reports hide a request automatically. To review without Studio, run
+`node scripts/db/reports.mjs`, which lists reported dua requests, jamaat times and Ask Noor answers, and has commands to
+restore or remove each one. With Studio:
 
-1. In Studio, open `dua_reports` joined with `dua_requests`.
+1. Open `dua_reports` joined with `dua_requests`.
 2. To restore a request, set `hidden = false` and `report_count = 0`.
 3. To remove it, delete the row. For repeated abuse, delete the user from Authentication.
 
@@ -69,6 +71,9 @@ Apple and Google require this reporting, blocking and removal for apps with user
 community rules are in `site/terms.html`.
 
 ## Ask Noor (Groq, free tier)
+
+Run `migrations/0008_ask_reports.sql` as well. It adds the Report this answer button's queue, which Google Play requires
+for AI-written answers.
 
 1. Create a key at console.groq.com. The free tier is enough to start.
 2. Run `migrations/0004_ask.sql` and `migrations/0007_server_calls.sql`, then

@@ -43,6 +43,11 @@ const QUERIES: Record<PlaceKind, (r: number, lat: number, lng: number) => string
 
 const DAY = 24 * 3_600_000;
 
+// The public servers are only told a coarse area: coordinates snap to a 0.02° grid (about 2 km), and the
+// radius grows to cover the snap. Distances and the final filter use the exact position, on the phone.
+export const coarseCoord = (v: number) => Number((Math.round(v * 50) / 50).toFixed(2));
+const COARSE_MARGIN_M = 1_600;
+
 /** Turn raw OSM elements into places, measured from (lat, lng), nearest first. */
 export function toPlaces(kind: PlaceKind, elements: OverpassElement[], lat: number, lng: number): Place[] {
   const seen = new Set<string>();
@@ -107,10 +112,10 @@ export async function findPlaces(kind: PlaceKind, lat: number, lng: number, radi
     const cached = await AsyncStorage.getItem(key);
     if (cached) {
       const { at, elements } = JSON.parse(cached) as { at: number; elements: OverpassElement[] };
-      if (Date.now() - at < DAY) return toPlaces(kind, elements, lat, lng);
+      if (Date.now() - at < DAY) return toPlaces(kind, elements, lat, lng).filter((p) => p.km * 1000 <= radiusM);
     }
   } catch {}
-  const elements = await query(QUERIES[kind](radiusM, lat, lng));
+  const elements = await query(QUERIES[kind](radiusM + COARSE_MARGIN_M, coarseCoord(lat), coarseCoord(lng)));
   AsyncStorage.setItem(key, JSON.stringify({ at: Date.now(), elements })).catch(() => {});
-  return toPlaces(kind, elements, lat, lng);
+  return toPlaces(kind, elements, lat, lng).filter((p) => p.km * 1000 <= radiusM);
 }

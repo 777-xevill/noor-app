@@ -50,6 +50,13 @@ async function viaServer(body: { phase: 'keywords' | 'answer'; question: string;
   return typeof data === 'string' ? data : '';
 }
 
+/** Send a question and its answer to the review queue (private.ask_reports, migration 0008). */
+export async function reportAnswer(question: string, answer: string, lang: Lang) {
+  if (!supabase) throw new AskError('off');
+  const { error } = await supabase.rpc('report_ask_answer', { question, answer, lang, device: installId() });
+  if (error) throw new AskError(error.message === 'limit' ? 'limit' : 'network');
+}
+
 export type AskResult = { text: string; sources: Passage[] };
 export type AskStage = 'searching' | 'writing';
 

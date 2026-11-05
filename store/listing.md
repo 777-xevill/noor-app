@@ -34,13 +34,16 @@ PRAYER TIMES YOU CAN TRUST
 THE QURAN
 • All 114 surahs in clear Uthmani script
 • Bangla (Muhiuddin Khan) and English (Saheeh International) meanings, plus transliteration
-• Verse-by-verse recitation by Mishary Rashid Alafasy
+• Recitation by 12 reciters, with offline audio
+• Tafsir, word-by-word meanings and tajweed colours
+• Memorisation (hifz) revision on a gentle schedule
 • Bookmarks, pick up where you left off, and a gentle daily reading goal
 
 DUAS AND DHIKR
 • Hisnul Muslim (Fortress of the Muslim): 131 chapters, with sources
 • A tasbih counter with the dhikr after prayer
 • The 99 Names of Allah
+• A Bangla hadith library, with a hadith of the day
 
 EVERYDAY TOOLS
 • Qibla compass
@@ -49,11 +52,14 @@ EVERYDAY TOOLS
 • Zakat calculator (gold and silver nisab in tola and grams)
 • Ramadan: Sehri and Iftar times, fasting log, a 30-juz reading plan, Taraweeh
 • Eid and Ramadan greeting cards
+• Nearby mosques and halal food, with jamaat times
+• Family circles to finish the Quran together
+• Ask Noor: AI answers drawn from the Quran and Hisnul Muslim, showing their sources
 
 MADE WITH CARE
 • Religious text is never typed by hand. It comes from established sources, which the app names.
-• Everything for worship is free, always. Noor Plus is an optional way to support the app.
-• No ads. Your data stays on your phone unless you choose to sign in and sync.
+• Free, with no ads and no tracking.
+• Your data stays on your phone unless you choose to sign in and sync.
 • Fully in Bangla and English, with a light and a dark look.
 
 ---
@@ -81,13 +87,16 @@ MADE WITH CARE
 কুরআন
 • ১১৪টি সূরা, স্পষ্ট উসমানি লিপিতে
 • বাংলা (মুহিউদ্দীন খান) ও ইংরেজি (সহীহ ইন্টারন্যাশনাল) অর্থ, সাথে উচ্চারণ
-• মিশারি রাশিদ আলাফাসির কণ্ঠে আয়াতভিত্তিক তিলাওয়াত
+• ১২ জন ক্বারির তিলাওয়াত, অফলাইনেও শোনা যায়
+• তাফসির, শব্দে শব্দে অর্থ ও তাজবিদের রং
+• হিফজের পুনরাবৃত্তি, সহজ সময়সূচিতে
 • বুকমার্ক, যেখানে থেমেছিলেন সেখান থেকে শুরু, আর প্রতিদিনের পাঠের লক্ষ্য
 
 দোয়া ও যিকির
 • হিসনুল মুসলিম: ১৩১টি অধ্যায়, সূত্রসহ
 • নামাজের পরের যিকিরসহ তাসবিহ কাউন্টার
 • আল্লাহর ৯৯ নাম
+• বাংলা হাদিস লাইব্রেরি ও প্রতিদিনের হাদিস
 
 প্রতিদিনের সরঞ্জাম
 • কিবলা কম্পাস
@@ -96,11 +105,14 @@ MADE WITH CARE
 • যাকাত ক্যালকুলেটর (তোলা ও গ্রামে স্বর্ণ ও রুপার নিসাব)
 • রমজান: সেহরি ও ইফতারের সময়, রোজার হিসাব, ৩০ পারার পাঠ-পরিকল্পনা, তারাবিহ
 • ঈদ ও রমজানের শুভেচ্ছা কার্ড
+• কাছের মসজিদ ও হালাল খাবার, জামাতের সময়সহ
+• একসাথে কুরআন খতমের জন্য পারিবারিক বৃত্ত
+• নূরকে জিজ্ঞেস করুন: কুরআন ও হিসনুল মুসলিম থেকে এআই-এর উত্তর, সূত্রসহ
 
 যত্নে তৈরি
 • ধর্মীয় লেখা কখনো হাতে টাইপ করা হয় না। প্রতিষ্ঠিত সূত্র থেকে নেওয়া হয় এবং অ্যাপে সূত্রের নাম দেওয়া থাকে।
-• ইবাদতের সবকিছু সবসময় ফ্রি। নূর প্লাস অ্যাপকে সহায়তার একটি ঐচ্ছিক উপায়।
-• কোনো বিজ্ঞাপন নেই। আপনি সাইন ইন করে সিঙ্ক না করলে আপনার তথ্য ফোনেই থাকে।
+• ফ্রি, কোনো বিজ্ঞাপন ও ট্র্যাকিং নেই।
+• আপনি নিজে সাইন ইন করে সিঙ্ক না করলে আপনার তথ্য ফোনেই থাকে।
 • পুরোপুরি বাংলা ও ইংরেজিতে, লাইট ও ডার্ক দুই রূপে।
 
 ---

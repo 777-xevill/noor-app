@@ -13,7 +13,7 @@ import { LANGS, type Lang, useT } from '@/i18n';
 import { useCare } from '@/features/care/store';
 import { useQuranProgress } from '@/features/quran/progress';
 import { PRIVACY_URL, TERMS_URL } from '@/lib/site';
-import { usePlus } from '@/features/premium/store';
+import { plusOnSale, usePlus } from '@/features/premium/store';
 import { useSyncMeta } from '@/features/sync/store';
 import { type DarkStyle, type ThemeMode, useSettings } from '@/features/settings/store';
 
@@ -63,16 +63,18 @@ export default function SettingsScreen() {
           onChange={(darkStyle) => (darkStyle === 'midnight' && !plus ? router.push('/plus') : s.set({ darkStyle }))}
           options={[
             { value: 'graphite', label: L.t('settings.graphite') },
-            { value: 'midnight', label: `${L.t('settings.midnight')} ✦` },
+            { value: 'midnight', label: plusOnSale ? `${L.t('settings.midnight')} ✦` : L.t('settings.midnight') },
           ]}
         />
-        <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
-          {L.t('settings.midnightNote')}
-        </Txt>
+        {plusOnSale && (
+          <Txt variant="caption" tone="muted" style={{ paddingHorizontal: 6 }}>
+            {L.t('settings.midnightNote')}
+          </Txt>
+        )}
       </View>
 
       <ListGroup>
-        <ListRow icon="sparkles" title={L.t('settings.plus')} value={plus ? L.t('settings.plusOn') : undefined} onPress={() => router.push('/plus')} />
+        {plusOnSale && <ListRow icon="sparkles" title={L.t('settings.plus')} value={plus ? L.t('settings.plusOn') : undefined} onPress={() => router.push('/plus')} />}
         <ListRow icon="cloud" title={L.t('settings.account')} value={accountEmail ?? L.t('settings.accountOff')} onPress={() => router.push('/settings/account')} last />
       </ListGroup>
 

@@ -42,7 +42,7 @@ export default function KidsScreen() {
                   speakArabic(a.ar);
                 }} scaleTo={0.9} accessibilityRole="button" accessibilityLabel={lang === 'bn' ? a.nameBn : a.name} style={{ width: '22%', flexGrow: 1 }}>
                 <View style={{ height: 76, borderRadius: 18, backgroundColor: t.pill, alignItems: 'center', justifyContent: 'center' }}>
-                  <Txt variant="quran" style={{ fontSize: 34, lineHeight: 56 }}>
+                  <Txt variant="arabic" style={{ fontSize: 32, lineHeight: 56 }}>
                     {a.letter}
                   </Txt>
                 </View>

@@ -1,6 +1,7 @@
 import type { Href } from 'expo-router';
 import type { IconName } from '@/components/Icon';
 import type { Key } from '@/i18n/en';
+import { plusOnSale } from '@/features/premium/store';
 
 /** `label` and `blurb` are translation keys. */
 export type Tool = { key: string; label: Key; icon: IconName; href: Href; blurb: Key };
@@ -57,5 +58,5 @@ export const TOOL_GROUPS: { title: Key; tools: Tool[] }[] = [
   { title: 'group.track', tools: [T.journal, T.tracker, T.qada, T.hifz, T.milestones, T.calendar] },
   { title: 'group.community', tools: [T.ask, T.community, T.circle, T.donate, T.cards, T.lectures] },
   { title: 'group.learn', tools: [T.learn, T.hadith, T.kids, T.names, T.shahadah, T.greetings] },
-  { title: 'group.more', tools: [T.zakat, T.account, T.plus, T.settings] },
+  { title: 'group.more', tools: plusOnSale ? [T.zakat, T.account, T.plus, T.settings] : [T.account, T.settings] },
 ];

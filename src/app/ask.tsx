@@ -12,7 +12,7 @@ import { Txt } from '@/components/Txt';
 import { SURAHS } from '@/data/surahs';
 import { useT } from '@/i18n';
 import type { Key } from '@/i18n/en';
-import { AskError, askEnabled, askNoor, type AskResult, type AskStage } from '@/features/ask/ask';
+import { AskError, askEnabled, askNoor, type AskResult, type AskStage, reportAnswer } from '@/features/ask/ask';
 import { MAX_QUESTION } from '@/features/ask/prompts';
 import type { Passage } from '@/features/ask/search';
 import { fonts } from '@/theme/fonts';
@@ -49,6 +49,56 @@ function SourceCard({ p }: { p: Passage }) {
         </Txt>
       </Glass>
     </Press>
+  );
+}
+
+/** Flag a wrong or offensive answer without leaving the app. Asks first, because it sends the text for review. */
+function ReportAnswer({ question, answer }: { question: string; answer: string }) {
+  const t = useTheme();
+  const L = useT();
+  const [state, setState] = useState<'idle' | 'confirm' | 'sending' | 'sent' | 'failed'>('idle');
+
+  if (state === 'sent') {
+    return (
+      <Txt variant="caption" tone="muted">
+        {L.t('ask.reportThanks')}
+      </Txt>
+    );
+  }
+  if (state === 'idle') {
+    return (
+      <Press onPress={() => setState('confirm')} accessibilityRole="button" style={{ alignSelf: 'flex-start', paddingVertical: 4 }}>
+        <Txt variant="caption" tone="muted" style={{ textDecorationLine: 'underline' }}>
+          {L.t('ask.report')}
+        </Txt>
+      </Press>
+    );
+  }
+  const send = async () => {
+    setState('sending');
+    try {
+      await reportAnswer(question, answer, L.lang);
+      setState('sent');
+    } catch {
+      setState('failed');
+    }
+  };
+  return (
+    <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: t.glassBorder, paddingTop: 10 }}>
+      <Txt variant="caption" tone="soft">
+        {L.t(state === 'failed' ? 'ask.reportFail' : 'ask.reportNote')}
+      </Txt>
+      <View style={{ flexDirection: 'row', gap: 18, alignItems: 'center' }}>
+        <Press onPress={send} disabled={state === 'sending'} accessibilityRole="button" style={{ paddingVertical: 4 }}>
+          {state === 'sending' ? <ActivityIndicator /> : <Txt variant="bodyStrong">{L.t('ask.reportSend')}</Txt>}
+        </Press>
+        <Press onPress={() => setState('idle')} accessibilityRole="button" style={{ paddingVertical: 4 }}>
+          <Txt variant="body" tone="soft">
+            {L.t('ask.reportCancel')}
+          </Txt>
+        </Press>
+      </View>
+    </View>
   );
 }
 
@@ -153,6 +203,7 @@ export default function AskScreen() {
             <Txt variant="body" style={{ fontSize: 16, lineHeight: 25 }}>
               {result.text || L.t('ask.noAnswer')}
             </Txt>
+            {!!result.text && <ReportAnswer key={result.text} question={result.q} answer={result.text} />}
           </Glass>
           {result.sources.length > 0 && (
             <Txt variant="eyebrow" tone="muted" style={{ paddingHorizontal: 6 }}>

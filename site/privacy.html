@@ -16,28 +16,35 @@
   </header>
 
   <main class="doc">
-    <span class="eyebrow">Effective 29 September 2026</span>
+    <span class="eyebrow">Effective 3 November 2026</span>
     <h1 style="font-size:40px">Privacy Policy</h1>
     <p>Noor is made by Ashikur Rahman Rifat in Dhaka, Bangladesh. This policy explains what the Noor app does with your information. In short: <strong>your data stays on your phone</strong> unless you choose to sign in, and nothing is ever sold or used for advertising.</p>
 
     <h2>What stays on your phone</h2>
     <ul>
-      <li><strong>Your location.</strong> It is used on your phone to calculate prayer times and the Qibla direction. It is never sent to us or anyone else.</li>
+      <li><strong>Your location.</strong> It is used on your phone to calculate prayer times and the Qibla direction, and it is never sent to us. The one exception is finding nearby places, explained below.</li>
       <li><strong>Everything you record:</strong> your prayer log, Quran progress and bookmarks, journal, fasts, dhikr counts, saved duas, Ramadan plan, milestones and settings. It all stays on your phone unless you sign in.</li>
-      <li><strong>Zakat figures</strong> always stay on your phone, even when you are signed in.</li>
+      <li><strong>Zakat figures, the giving log and women's mode</strong> always stay on your phone, even when you are signed in.</li>
     </ul>
+    <p>Noor turns off Android's automatic cloud backup, so this data isn't copied to your Google account either. It does mean that reinstalling the app starts fresh unless you signed in.</p>
 
     <h2>If you sign in (optional)</h2>
-    <p>If you create an account, we store your email address to sign you in, plus a copy of the data listed above so it can be backed up and synced between your phones. It is stored with Supabase, our database provider, protected so that only your account can read it, and encrypted in transit. You can delete your account and this copy at any time in the app: Settings → Account → Delete account. Signing out or deleting your account leaves the data on your phone as it is.</p>
+    <p>If you create an account, we store your email address to sign you in, plus a copy of the data listed above so it can be backed up and synced between your phones. It is stored with Supabase, our database provider, protected so that only your account can read it, and encrypted in transit. You can delete your account and this copy at any time in the app (Settings → Account → Delete account) or <a href="delete-account.html">without the app</a>. Signing out or deleting your account leaves the data on your phone as it is.</p>
 
     <h2>If you buy Noor Plus (optional)</h2>
     <p>Payments are handled by Apple or Google; we never see your card details. RevenueCat, our purchase provider, receives your purchase history and an anonymous ID so that Plus works on your devices.</p>
 
-    <h2>Dua requests and Ask Noor (optional)</h2>
-    <p>A dua request you post is stored with Supabase and shown to others without your name unless you choose to show it. A question you ask Ask Noor is sent, with the Quran and dua passages found for it, to Groq to write the answer. It is not stored by Noor.</p>
+    <h2>Features you can choose to use</h2>
+    <ul>
+      <li><strong>Nearby mosques and halal food.</strong> When you search, the app sends a rough area (rounded to about 2 km, never your exact position) to public OpenStreetMap servers: overpass-api.de, overpass.private.coffee and maps.mail.ru. They see your internet address, as any website does. Noor keeps no record of it.</li>
+      <li><strong>Dua requests.</strong> A request you post is stored with Supabase and shown to others without your name unless you choose to show it.</li>
+      <li><strong>Ask Noor.</strong> Your question is sent through Supabase, with the Quran and dua passages found for it, to Groq to write the answer. Noor doesn't store the question, only a count per account or per install (a random ID the app creates) to apply a daily limit. If you report an answer, that question and answer are kept until we have reviewed them.</li>
+      <li><strong>Mosque jamaat times.</strong> Times you share or confirm are stored with Supabase and shown to everyone, without your name.</li>
+      <li><strong>Family circles.</strong> The circle stores the first name you choose and which juz you took. Other members see these.</li>
+    </ul>
 
-    <h2>Quran recitation</h2>
-    <p>When you play a recitation, the app downloads that verse’s audio file from everyayah.com. The request only says which verse is being played.</p>
+    <h2>Recitation, tafsir and hadith</h2>
+    <p>When you open these, the app downloads the text or audio you asked for from everyayah.com, audio.qurancdn.com, api.quran.com or cdn.jsdelivr.net. The request only says which verse or section you want, along with your internet address, as with any website.</p>
 
     <h2>What we never do</h2>
     <ul>
@@ -47,7 +54,7 @@
     </ul>
 
     <h2>Children</h2>
-    <p>Noor is suitable for all ages and does not knowingly collect information from children. Signing in is optional.</p>
+    <p>Noor is meant for people aged 13 and over. The Kids section is for parents and teachers to use with children. We don't knowingly collect information from children under 13. If you think a child has given us information, contact us and we will delete it.</p>
 
     <h2>Changes and contact</h2>
     <p>If this policy changes, we will update this page and the date above. Questions or requests: <span class="todo">support email to be added</span>.</p>
@@ -59,16 +66,25 @@
       <p>নূর তৈরি করেছেন আশিকুর রহমান রিফাত, ঢাকা, বাংলাদেশ। নূর অ্যাপ আপনার তথ্য নিয়ে কী করে, এই নীতিতে তা বলা হয়েছে। সংক্ষেপে: আপনি নিজে সাইন ইন না করলে <strong>আপনার তথ্য আপনার ফোনেই থাকে</strong>, আর কোনো তথ্য কখনো বিক্রি বা বিজ্ঞাপনে ব্যবহার করা হয় না।</p>
       <h2>যা আপনার ফোনেই থাকে</h2>
       <ul>
-        <li><strong>আপনার অবস্থান।</strong> নামাজের সময় ও কিবলার দিক হিসাব করতে ফোনেই ব্যবহার হয়। আমাদের বা অন্য কারো কাছে কখনো পাঠানো হয় না।</li>
+        <li><strong>আপনার অবস্থান।</strong> নামাজের সময় ও কিবলার দিক হিসাব করতে ফোনেই ব্যবহার হয়, আমাদের কাছে কখনো পাঠানো হয় না। একমাত্র ব্যতিক্রম কাছের জায়গা খোঁজা, যা নিচে বলা আছে।</li>
         <li><strong>আপনার সব হিসাব:</strong> নামাজের হিসাব, কুরআন পাঠের অগ্রগতি ও বুকমার্ক, দিনলিপি, রোজা, যিকির, সংরক্ষিত দোয়া, রমজানের পরিকল্পনা, মাইলফলক ও সেটিংস। সাইন ইন না করলে সবকিছু ফোনেই থাকে।</li>
-        <li><strong>যাকাতের হিসাব</strong> সাইন ইন করা থাকলেও সবসময় ফোনেই থাকে।</li>
+        <li><strong>যাকাতের হিসাব, দানের হিসাব ও নারীদের মোড</strong> সাইন ইন করা থাকলেও সবসময় ফোনেই থাকে।</li>
       </ul>
+      <p>নূর অ্যান্ড্রয়েডের স্বয়ংক্রিয় ক্লাউড ব্যাকআপ বন্ধ রাখে, তাই এই তথ্য আপনার গুগল অ্যাকাউন্টেও যায় না। এর ফলে সাইন ইন না করে থাকলে অ্যাপ আবার ইনস্টল করলে নতুন করে শুরু হয়।</p>
       <h2>সাইন ইন করলে (ঐচ্ছিক)</h2>
-      <p>অ্যাকাউন্ট খুললে সাইন ইনের জন্য আপনার ইমেইল ঠিকানা এবং উপরের তথ্যের একটি কপি রাখা হয়, যাতে ব্যাকআপ থাকে ও আপনার ফোনগুলোর মধ্যে সিঙ্ক হয়। এগুলো আমাদের ডেটাবেস সেবাদাতা Supabase-এ এমনভাবে সুরক্ষিত থাকে যে শুধু আপনার অ্যাকাউন্টই তা পড়তে পারে, আর আদান-প্রদানের সময় এনক্রিপ্টেড থাকে। অ্যাপের সেটিংস → অ্যাকাউন্ট → অ্যাকাউন্ট মুছে ফেলুন থেকে যেকোনো সময় অ্যাকাউন্ট ও এই কপি মুছতে পারবেন। সাইন আউট করলে বা অ্যাকাউন্ট মুছলেও ফোনের তথ্য যেমন আছে তেমনই থাকে।</p>
+      <p>অ্যাকাউন্ট খুললে সাইন ইনের জন্য আপনার ইমেইল ঠিকানা এবং উপরের তথ্যের একটি কপি রাখা হয়, যাতে ব্যাকআপ থাকে ও আপনার ফোনগুলোর মধ্যে সিঙ্ক হয়। এগুলো আমাদের ডেটাবেস সেবাদাতা Supabase-এ এমনভাবে সুরক্ষিত থাকে যে শুধু আপনার অ্যাকাউন্টই তা পড়তে পারে, আর আদান-প্রদানের সময় এনক্রিপ্টেড থাকে। অ্যাপের সেটিংস → অ্যাকাউন্ট → অ্যাকাউন্ট মুছে ফেলুন থেকে, অথবা <a href="delete-account.html#bn">অ্যাপ ছাড়াই</a>, যেকোনো সময় অ্যাকাউন্ট ও এই কপি মুছতে পারবেন। সাইন আউট করলে বা অ্যাকাউন্ট মুছলেও ফোনের তথ্য যেমন আছে তেমনই থাকে।</p>
       <h2>নূর প্লাস কিনলে (ঐচ্ছিক)</h2>
       <p>পেমেন্ট করে Apple বা Google; আপনার কার্ডের তথ্য আমরা কখনো দেখি না। প্লাস আপনার ডিভাইসগুলোতে চালু রাখতে আমাদের কেনাকাটা সেবাদাতা RevenueCat আপনার কেনাকাটার ইতিহাস ও একটি বেনামি আইডি পায়।</p>
-      <h2>কুরআন তিলাওয়াত</h2>
-      <p>তিলাওয়াত চালালে অ্যাপ everyayah.com থেকে সেই আয়াতের অডিও ফাইল নামায়। অনুরোধে শুধু কোন আয়াত বাজছে তা থাকে।</p>
+      <h2>যেসব সুবিধা আপনি বেছে নিয়ে ব্যবহার করেন</h2>
+      <ul>
+        <li><strong>কাছের মসজিদ ও হালাল খাবার।</strong> খুঁজলে অ্যাপ একটি আনুমানিক এলাকা (প্রায় ২ কিলোমিটারে গোল করা, কখনো আপনার সঠিক অবস্থান নয়) OpenStreetMap-এর পাবলিক সার্ভারে পাঠায়: overpass-api.de, overpass.private.coffee ও maps.mail.ru। যেকোনো ওয়েবসাইটের মতো তারা আপনার ইন্টারনেট ঠিকানা দেখতে পায়। নূর এর কোনো রেকর্ড রাখে না।</li>
+        <li><strong>দোয়ার অনুরোধ।</strong> আপনার পোস্ট করা অনুরোধ Supabase-এ থাকে এবং আপনি নিজে নাম দেখাতে না চাইলে নাম ছাড়াই অন্যদের দেখানো হয়।</li>
+        <li><strong>নূরকে জিজ্ঞেস করুন।</strong> উত্তর লেখার জন্য আপনার প্রশ্ন, এর জন্য পাওয়া কুরআন ও দোয়ার অংশসহ, Supabase হয়ে Groq-এ পাঠানো হয়। নূর প্রশ্নটি রাখে না, শুধু প্রতিদিনের সীমা মানতে প্রতি অ্যাকাউন্ট বা ইনস্টলের (অ্যাপের তৈরি একটি এলোমেলো আইডি) একটি গণনা রাখে। কোনো উত্তর রিপোর্ট করলে আমাদের পর্যালোচনা শেষ না হওয়া পর্যন্ত সেই প্রশ্ন ও উত্তর রাখা হয়।</li>
+        <li><strong>মসজিদের জামাতের সময়।</strong> আপনার শেয়ার করা বা নিশ্চিত করা সময় Supabase-এ থাকে এবং আপনার নাম ছাড়াই সবাইকে দেখানো হয়।</li>
+        <li><strong>পারিবারিক বৃত্ত।</strong> বৃত্তে আপনার বেছে নেওয়া নামের প্রথম অংশ আর আপনি কোন পারা নিয়েছেন তা থাকে। অন্য সদস্যরা এগুলো দেখতে পান।</li>
+      </ul>
+      <h2>তিলাওয়াত, তাফসির ও হাদিস</h2>
+      <p>এগুলো খুললে অ্যাপ আপনার চাওয়া লেখা বা অডিও everyayah.com, audio.qurancdn.com, api.quran.com বা cdn.jsdelivr.net থেকে নামায়। অনুরোধে শুধু কোন আয়াত বা অংশ চাইছেন তা থাকে, আর যেকোনো ওয়েবসাইটের মতো আপনার ইন্টারনেট ঠিকানা।</p>
       <h2>যা আমরা কখনো করি না</h2>
       <ul>
         <li>কোনো বিজ্ঞাপন নেই, কোনো বিজ্ঞাপন বা ট্র্যাকিং আইডিও নেই।</li>
@@ -76,7 +92,7 @@
         <li>আপনার তথ্য বিক্রি বা শেয়ার করা হয় না।</li>
       </ul>
       <h2>শিশু</h2>
-      <p>নূর সব বয়সের জন্য উপযোগী এবং জেনেশুনে শিশুদের কাছ থেকে কোনো তথ্য সংগ্রহ করে না। সাইন ইন ঐচ্ছিক।</p>
+      <p>নূর ১৩ বছর বা তার বেশি বয়সীদের জন্য। “শিশুদের জন্য” অংশটি মা-বাবা ও শিক্ষকরা শিশুদের সাথে ব্যবহার করার জন্য। আমরা জেনেশুনে ১৩ বছরের কম বয়সীদের কাছ থেকে কোনো তথ্য সংগ্রহ করি না। কোনো শিশু তথ্য দিয়েছে মনে হলে আমাদের জানান, আমরা মুছে দেব।</p>
       <h2>পরিবর্তন ও যোগাযোগ</h2>
       <p>এই নীতি বদলালে আমরা এই পাতা ও উপরের তারিখ হালনাগাদ করব। প্রশ্ন বা অনুরোধ: <span class="todo">সাপোর্ট ইমেইল যোগ করা হবে</span>।</p>
     </section>
